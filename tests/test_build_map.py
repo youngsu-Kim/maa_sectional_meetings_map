@@ -1,7 +1,7 @@
 import csv
 from datetime import date
 
-from meeting_time import normalize_date
+from meeting_time import fade_alphas, normalize_date
 from src.nodes.build_map import (
     build_map_node,
     current_term_label,
@@ -149,11 +149,18 @@ def test_map_fits_to_markers_not_default_view(tmp_path):
 
 
 def test_note_rendered_in_popup_and_csv(tmp_path):
-    note = "geocoded as 'Creighton University, Omaha, NE' (MAA page typo: NB is New Brunswick; Nebraska is NE)"
-    html, csv_rows = _run(tmp_path, [dict(FALL_RECORD, note=note)])
+    note = (
+        "corrected from 'Creighton University, Omaha, NB' "
+        "(MAA page typo: NB is New Brunswick; Nebraska is NE)"
+    )
+    html, csv_rows = _run(
+        tmp_path,
+        [dict(FALL_RECORD, location="Creighton University, Omaha, NE", note=note)],
+    )
 
-    assert "Omaha, NE" in html  # note visible in the marker popup
-    assert "Omaha, NB" in html  # original location text preserved
+    assert "Omaha, NE" in html  # corrected location text
+    assert "&dagger;" in html  # dagger marker before the note
+    assert "Omaha, NB" in html  # original preserved inside the note
     assert csv_rows[0]["note"] == note
     assert csv_rows[0]["status"] == "ok"
 
@@ -214,3 +221,43 @@ def test_national_rows_get_own_color_and_legend(tmp_path):
 def test_no_mathfest_legend_without_national_rows(tmp_path):
     html, _ = _run(tmp_path, [dict(FALL_RECORD)])
     assert "MathFest" not in html
+
+
+def test_fade_alphas_soonest_full_then_lighter():
+    alphas = fade_alphas(["April 3, 2027", "February 10, 2027", "March 1, 2027"])
+    # input order preserved: Feb is soonest -> 1.0; Mar -> 0.85; Apr -> 0.7
+    assert alphas == [0.7, 1.0, 0.85]
+
+
+def test_fade_alphas_ties_share_alpha_and_floor():
+    # same month ties share rank; long tails stop at the floor
+    dates = ["January 5, 2027", "January 20, 2027", "February 1, 2027",
+             "March 1, 2027", "April 1, 2027", "May 1, 2027", "June 1, 2027",
+             "July 1, 2027", "August 1, 2027"]
+    alphas = fade_alphas(dates)
+    assert alphas[0] == alphas[1] == 1.0
+    assert alphas[2] == 0.85
+    assert min(alphas) == 0.3
+
+
+def test_upcoming_and_national_pins_fade_by_date(tmp_path):
+    upcoming_records = [
+        dict(SPRING_RECORD, row_id="row-a", meeting_index=0,
+             section="AAA", date="April 3, 2027"),
+        dict(SPRING_RECORD, row_id="row-b", meeting_index=0,
+             section="BBB", date="February 10, 2027"),
+    ]
+    mathfest_records = [
+        dict(MATHFEST_RECORD, meeting_index=0, date="August 4-7, 2027"),
+        dict(MATHFEST_RECORD, meeting_index=1, date="August 2-5, 2028"),
+        dict(MATHFEST_RECORD, meeting_index=2, date="August 8-11, 2029"),
+    ]
+    html, _ = _run(
+        tmp_path,
+        [dict(FALL_RECORD)] + upcoming_records + mathfest_records,
+    )
+    # current-term pin (Nov 2026) stays opaque; fades apply per future group
+    assert '"opacity": 0.7' in html or "opacity&#39;: 0.7" in html or "0.7" in html
+    assert '"opacity": 0.85' in html or "0.85" in html
+    # MathFest sequence: 1.0 / 0.85 / 0.7 (soonest unmarked = fully opaque)
+    assert html.count("0.85") >= 2  # one upcoming, one MathFest

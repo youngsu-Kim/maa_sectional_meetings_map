@@ -61,8 +61,9 @@ Pacific Northwest) search `us,ca`. Unlisted sections default to `us`.
 `data/geocode_cache.csv` caches venue coordinates so repeated runs stay
 within the [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/).
 `data/location_corrections.csv` lists known typos on the MAA page (e.g.
-"Omaha, NB" for Nebraska): the corrected string is used for geocoding while
-the original text and an explanatory note are kept on the map and in the CSV.
+"Omaha, NB" for Nebraska): corrected locations are what gets listed and
+pinned, with a dagger (&dagger;) marker whose tooltip shows the original
+text and the reason, so readers can verify the fix themselves.
 
 ## Tests
 

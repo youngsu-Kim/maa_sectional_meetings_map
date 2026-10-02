@@ -21,6 +21,7 @@ from shiny import App, reactive, render, ui
 
 from meeting_time import (
     current_term_label,
+    fade_alphas,
     meeting_sort_key,
     meeting_status,
     normalize_date,
@@ -104,7 +105,7 @@ def load_meetings() -> pd.DataFrame:
 def _popup_html(row) -> str:
     note = ""
     if isinstance(row["note"], str) and row["note"]:
-        note = f"<i>{row['note']}</i><br>"
+        note = f"<i>&dagger; {row['note']}</i><br>"
     speakers = "".join(
         f'<span style="color:{color};">{name}</span><br>' if color else f"{name}<br>"
         for name, color in _speaker_lines(_text(row["speakers"]))
@@ -122,11 +123,25 @@ def _popup_html(row) -> str:
 
 def build_map(view: pd.DataFrame) -> folium.Map:
     m = folium.Map(location=[39.5, -98.35], zoom_start=4, tiles="OpenStreetMap")
+
+    # Future pins fade with temporal distance: the soonest upcoming (and the
+    # soonest MathFest) meeting stays fully opaque, later ones get lighter.
+    fade: dict = {}
+    for bucket in ("upcoming", "mathfest"):
+        sub = view[view["bucket"] == bucket]
+        alphas = fade_alphas([str(d) for d in sub["date"]])
+        fade.update(zip(sub.index, alphas))
+
     for _, row in view.iterrows():
+        marker_kwargs = {}
+        alpha = fade.get(row.name)
+        if alpha is not None and alpha < 1.0:
+            marker_kwargs["opacity"] = alpha
         folium.Marker(
             [row["latitude"], row["longitude"]],
             popup=folium.Popup(_popup_html(row), max_width=300),
             icon=folium.Icon(color=STATUS_COLORS[row["bucket"]]),
+            **marker_kwargs,
         ).add_to(m)
     if len(view) >= 2:
         m.fit_bounds(
@@ -287,23 +302,37 @@ def server(input, output, session):
                 for name, color in _speaker_lines(_text(row["speakers"]))
             ]
             location_text = _text(row["location"])
+            location_note = _text(row["note"])
+            location_children = []
             if location_text and row["latitude"] and row["longitude"]:
-                location_cell = ui.tags.a(
-                    location_text,
-                    href=(
-                        "https://www.google.com/maps/search/"
-                        f"?api=1&query={row['latitude']},{row['longitude']}"
-                    ),
-                    target="_blank",
-                    rel="noopener noreferrer",
+                location_children.append(
+                    ui.tags.a(
+                        location_text,
+                        href=(
+                            "https://www.google.com/maps/search/"
+                            f"?api=1&query={row['latitude']},{row['longitude']}"
+                        ),
+                        target="_blank",
+                        rel="noopener noreferrer",
+                    )
                 )
-            else:
-                location_cell = location_text
+            elif location_text:
+                location_children.append(location_text)
+            if location_text and location_note:
+                # dagger marks a corrected location; hover explains the fix
+                location_children.append(
+                    ui.tags.sup(
+                        "\u2020",
+                        title=location_note,
+                        style="color: #6c757d; cursor: help;",
+                    )
+                )
+            location_cell = location_children
             body.append(
                 ui.tags.tr(
                     ui.tags.td(section_cell),
                     ui.tags.td(normalize_date(_text(row["date"]))),
-                    ui.tags.td(location_cell),
+                    ui.tags.td(*location_cell),
                     ui.tags.td(*speakers_cell),
                     ui.tags.td(
                         ui.tags.span(

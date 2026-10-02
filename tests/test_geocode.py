@@ -206,11 +206,10 @@ def test_correction_fixes_typo_and_keeps_note(tmp_path, monkeypatch):
     )
 
     record = result["geocoded"][0]
-    # original text is preserved for display
-    assert record["location"] == "Creighton University, Omaha, NB"
-    # geocoded via the corrected string, with a visible note
+    # the corrected text is what gets listed; the note keeps the original
+    assert record["location"] == "Creighton University, Omaha, NE"
     assert record["latitude"] == 41.2651
-    assert "Omaha, NE" in record["note"]
+    assert "corrected from 'Creighton University, Omaha, NB'" in record["note"]
     assert "Nebraska is NE" in record["note"]
     assert result["corrections_applied"] == [
         "row-7: Creighton University, Omaha, NB -> Creighton University, Omaha, NE"
@@ -345,4 +344,5 @@ def test_correction_hits_cache_on_second_run(tmp_path, monkeypatch):
     record = result["geocoded"][0]
     assert record["latitude"] == 41.2651
     assert result["cache_hits"] == 1
+    assert record["location"] == "Creighton University, Omaha, NE"  # corrected listing
     assert record["note"]  # the note is kept even on cache hits

@@ -99,6 +99,29 @@ def meeting_sort_key(date_str: str) -> tuple[int, int]:
     return parsed
 
 
+def fade_alphas(
+    dates: list[str], step: float = 0.15, floor: float = 0.3
+) -> list[float]:
+    """Pin opacity per date: soonest = 1.0, later ones lighter and lighter.
+
+    Ties (same year/month) share the same alpha so equal dates do not look
+    arbitrarily different. Input order is preserved in the output.
+    """
+    if not dates:
+        return []
+    order = sorted(range(len(dates)), key=lambda i: meeting_sort_key(dates[i]))
+    alphas = [1.0] * len(dates)
+    prev_key = None
+    distinct = -1
+    for idx in order:
+        key = meeting_sort_key(dates[idx])
+        if key != prev_key:
+            distinct += 1
+            prev_key = key
+        alphas[idx] = max(floor, round(1.0 - step * distinct, 2))
+    return alphas
+
+
 def meeting_status(date_str: str, today: date | None = None) -> str:
     """Bucket a meeting as 'past', 'current', or 'upcoming' relative to today.
 

@@ -159,13 +159,14 @@ def geocode_node(state: PipelineState) -> dict:
                 results.append(record)
                 continue
 
-            # Known source-data typos: geocode the corrected string, but display
-            # the original text and keep a note of what was changed and why.
+            # Known source-data typos: list the corrected text and keep a note
+            # (shown as a dagger marker) so readers can verify the fix.
             lookup, note = location, ""
             if location in corrections:
                 corrected, reason = corrections[location]
                 lookup = corrected
-                note = f"geocoded as {corrected!r}" + (f" ({reason})" if reason else "")
+                note = f"corrected from {location!r}" + (f" ({reason})" if reason else "")
+                record["location"] = corrected
                 applied.append(f"{row_id}: {location} -> {corrected}")
 
             if lookup in cache:

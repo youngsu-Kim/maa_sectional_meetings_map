@@ -7,6 +7,7 @@ import folium
 
 from meeting_time import (
     current_term_label,
+    fade_alphas,
     meeting_status,
     normalize_date,
     term_label,
@@ -43,7 +44,7 @@ _LINK_STYLE = (
 def _popup(row) -> str:
     note_line = ""
     if row.get("note"):
-        note_line = f"<i>{html.escape(str(row['note']))}</i><br>"
+        note_line = f"<i>&dagger; {html.escape(str(row['note']))}</i><br>"
     return (
         f"<b>{html.escape(row['section'])}</b> "
         f"({html.escape(term_label(str(row['date'])))})<br>"
@@ -68,6 +69,25 @@ def build_map_node(state: PipelineState) -> dict:
     # classify once per meeting; buckets shift automatically as time passes
     statuses = {id(r): meeting_status(str(r["date"]), today) for r in rows}
 
+    # Future pins fade with temporal distance: the soonest upcoming (and the
+    # soonest national) meeting stays fully opaque, later ones get lighter.
+    def _fade_group(group: list[dict]) -> dict[int, float]:
+        alphas = fade_alphas([str(r["date"]) for r in group])
+        return {id(r): a for r, a in zip(group, alphas)}
+
+    upcoming_rows = [
+        r for r in rows
+        if r.get("status") == "ok" and r.get("latitude") is not None
+        and statuses[id(r)] == "upcoming"
+        and not str(r.get("row_id", "")).startswith("national-")
+    ]
+    national_rows = [
+        r for r in rows
+        if r.get("status") == "ok" and r.get("latitude") is not None
+        and str(r.get("row_id", "")).startswith("national-")
+    ]
+    alphas = {**_fade_group(upcoming_rows), **_fade_group(national_rows)}
+
     m = folium.Map(location=list(MAP_CENTER), zoom_start=ZOOM_START, tiles="OpenStreetMap")
 
     placed, unplaced = [], []
@@ -77,10 +97,15 @@ def build_map_node(state: PipelineState) -> dict:
                 color = NATIONAL_COLOR
             else:
                 color = STATUS_COLORS[statuses[id(row)]]
+            marker_kwargs = {}
+            alpha = alphas.get(id(row))
+            if alpha is not None and alpha < 1.0:
+                marker_kwargs["opacity"] = alpha
             folium.Marker(
                 [row["latitude"], row["longitude"]],
                 popup=folium.Popup(_popup(row), max_width=300),
                 icon=folium.Icon(color=color),
+                **marker_kwargs,
             ).add_to(m)
             placed.append(row)
         else:

@@ -1,9 +1,10 @@
 import argparse
 import os
+from datetime import date
 
 from dotenv import load_dotenv
 
-from src.config import FIXTURES_DIR, ROOT
+from src.config import FIXTURES_DIR, LAST_RUN_PATH, ROOT
 
 
 def parse_args(argv=None):
@@ -63,6 +64,12 @@ def main(argv=None) -> int:
         "callbacks": [tracker],
     }
     final_state = graph.invoke(init_state, config=config)
+
+    # Record the collection date so the front ends can display it
+    # ("Data collected: ..."). Dry runs replay fixtures and must not
+    # overwrite the real timestamp.
+    if not args.dry_run:
+        LAST_RUN_PATH.write_text(date.today().isoformat(), encoding="utf-8")
 
     _print_summary(final_state, tracker)
     return 0

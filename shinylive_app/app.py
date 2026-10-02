@@ -11,6 +11,8 @@ Regenerate the static export with:
         export('shinylive_app', 'site/shinylive')"
 """
 
+import re
+from datetime import date
 from pathlib import Path
 
 import folium
@@ -21,10 +23,13 @@ from meeting_time import (
     current_term_label,
     meeting_sort_key,
     meeting_status,
+    normalize_date,
     term_label,
 )
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "meetings_latest.csv"
+SOURCE_URL = "https://maa.org/section-meetings/"
+REPO_URL = "https://github.com/youngsu-Kim/maa-sectional-meeting-map"
 
 STATUS_COLORS = {
     "past": "lightgray",   # light grey
@@ -37,6 +42,28 @@ STATUS_LABELS = {
     "current": "Current term",
     "upcoming": "Upcoming",
 }
+
+# Speaker-program tags from the MAA page, color-coded in the table and popups.
+SPEAKER_TYPE_COLORS = {
+    "visitor": "#b45309",  # amber (blue read as a hyperlink)
+    "polya": "#9467bd",    # purple
+    "nam": "#d62728",      # red
+    "awm": "#2ca02c",      # green
+}
+_SPEAKER_TAG_RE = re.compile(r"\(([^)]+)\)\s*$")
+
+
+def _speaker_lines(speakers: str) -> list[tuple[str, str | None]]:
+    """One (name, color) per speaker; color matches the program tag if any."""
+    lines = []
+    for part in speakers.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        match = _SPEAKER_TAG_RE.search(part)
+        color = SPEAKER_TYPE_COLORS.get(match.group(1).casefold()) if match else None
+        lines.append((part, color))
+    return lines
 
 _LEGEND_STYLE = (
     "position: absolute; top: 10px; right: 10px; z-index: 9999; "
@@ -72,12 +99,16 @@ def _popup_html(row) -> str:
     note = ""
     if isinstance(row["note"], str) and row["note"]:
         note = f"<i>{row['note']}</i><br>"
+    speakers = "".join(
+        f'<span style="color:{color};">{name}</span><br>' if color else f"{name}<br>"
+        for name, color in _speaker_lines(_text(row["speakers"]))
+    )
     return (
         f"<b>{row['section']}</b> ({term_label(str(row['date']))})<br>"
-        f"{row['date']}<br>"
+        f"{normalize_date(_text(row['date']))}<br>"
         f"{row['location']}<br>"
         f"{note}"
-        f"{row['speakers']}<br>"
+        f"{speakers}"
         f"<a href='{row['section_url']}' target='_blank' rel='noopener noreferrer'>"
         f"{row['section_url']}</a>"
     )
@@ -114,21 +145,48 @@ def _text(value) -> str:
     return "" if value is None or (isinstance(value, float) and pd.isna(value)) else str(value)
 
 
+def _collected_line() -> str | None:
+    """'Data collected: Oct 2, 2026' from the pipeline's last_run.txt."""
+    try:
+        d = date.fromisoformat(
+            (DATA_PATH.parent / "last_run.txt").read_text(encoding="utf-8").strip()
+        )
+    except (OSError, ValueError):
+        return None
+    return f"Data collected: {d.strftime('%b')} {d.day}, {d.year}"
+
+
 app_ui = ui.page_sidebar(
     ui.sidebar(
         ui.h3("MAA Sectional Meetings"),
+        ui.p(
+            {"style": "font-size: 0.85em;"},
+            ui.tags.a(
+                "Data source: maa.org/section-meetings",
+                href=SOURCE_URL,
+                target="_blank",
+                rel="noopener noreferrer",
+            ),
+            ui.tags.br(),
+            ui.em("Unofficial extract; there may be errors."),
+            *(
+                [ui.tags.br(), _collected_line()]
+                if _collected_line()
+                else []
+            ),
+        ),
         ui.input_checkbox_group(
             "buckets",
             "Show meetings",
             choices=_bucket_choices(),
-            selected=list(STATUS_LABELS),
+            selected=["current", "upcoming"],
         ),
         ui.input_text("search", "Filter by section or location", ""),
         ui.input_radio_buttons(
             "sortby",
             "Sort table by",
             choices={"date": "Date", "section": "Section"},
-            selected="date",
+            selected="section",
             inline=True,
         ),
         ui.tags.p(
@@ -136,6 +194,17 @@ app_ui = ui.page_sidebar(
             ui.tags.a(
                 "\u2190 Static map",
                 href="../",
+                target="_blank",
+                rel="noopener noreferrer",
+            ),
+        ),
+        ui.tags.hr(),
+        ui.p(
+            {"style": "font-size: 0.85em; margin-bottom: 0;"},
+            "Maintained by ",
+            ui.tags.a(
+                "Youngsu Kim",
+                href=REPO_URL,
                 target="_blank",
                 rel="noopener noreferrer",
             ),
@@ -206,12 +275,16 @@ def server(input, output, session):
                 else section
             )
             bucket = _text(row["bucket"])
+            speakers_cell = [
+                ui.tags.div(name, style=f"color: {color};") if color else ui.tags.div(name)
+                for name, color in _speaker_lines(_text(row["speakers"]))
+            ]
             body.append(
                 ui.tags.tr(
                     ui.tags.td(section_cell),
-                    ui.tags.td(_text(row["date"])),
+                    ui.tags.td(normalize_date(_text(row["date"]))),
                     ui.tags.td(_text(row["location"])),
-                    ui.tags.td(_text(row["speakers"])),
+                    ui.tags.td(*speakers_cell),
                     ui.tags.td(
                         ui.tags.span(
                             "\u25cf",

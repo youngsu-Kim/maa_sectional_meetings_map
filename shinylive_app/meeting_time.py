@@ -20,12 +20,35 @@ _MONTH_NUMBERS = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
+_MONTH_ABBR = {
+    "jan": "Jan", "feb": "Feb", "mar": "Mar", "apr": "Apr", "may": "May",
+    "jun": "Jun", "jul": "Jul", "aug": "Aug", "sep": "Sep", "oct": "Oct",
+    "nov": "Nov", "dec": "Dec",
+}
+_MONTH_ABBR_PERIOD_RE = re.compile(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.")
+
+
+def normalize_date(date: str) -> str:
+    """Normalize month names to three-letter abbreviations.
+
+    'March 27-28, 2026' -> 'Mar 27-28, 2026'; 'Feb. 20-21, 2026' -> 'Feb 20-21, 2026'.
+    Strings without a month name are returned unchanged.
+    """
+    abbreviated = _MONTHS_RE.sub(
+        lambda m: _MONTH_ABBR[m.group(0)[:3].casefold()], date
+    )
+    # Drop periods directly after the abbreviation ("Feb. 20" -> "Feb 20").
+    return _MONTH_ABBR_PERIOD_RE.sub(r"\1", abbreviated)
 
 
 def term_of(date: str) -> str:
-    """Classify a meeting date as 'fall' or 'spring' (empty if undeterminable)."""
+    """Classify a meeting date as 'fall' or 'spring' (empty if undeterminable).
+
+    July/August count as fall, matching the academic-term ordering used by
+    meeting_status (Fall = Jul-Dec, Spring = Jan-Jun).
+    """
     months = {m[:3].casefold() for m in _MONTHS_RE.findall(date)}
-    if months & {"sep", "oct", "nov", "dec"}:
+    if months & {"jul", "aug", "sep", "oct", "nov", "dec"}:
         return "fall"
     if months & {"jan", "feb", "mar", "apr", "may", "jun"}:
         return "spring"

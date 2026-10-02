@@ -8,6 +8,7 @@ import folium
 from meeting_time import (
     current_term_label,
     meeting_status,
+    normalize_date,
     term_label,
     term_of,
 )
@@ -45,7 +46,7 @@ def _popup(row) -> str:
     return (
         f"<b>{html.escape(row['section'])}</b> "
         f"({html.escape(term_label(str(row['date'])))})<br>"
-        f"{html.escape(str(row['date']))}<br>"
+        f"{html.escape(normalize_date(str(row['date'])))}<br>"
         f"{html.escape(str(row['location']))}<br>"
         f"{note_line}"
         f"{html.escape(str(row['speakers']))}<br>"
@@ -101,7 +102,7 @@ def build_map_node(state: PipelineState) -> dict:
             if row.get("status") != "ok":
                 label += " (extraction failed)"
             elif row.get("date"):
-                label += f" ({html.escape(str(row['date']))})"
+                label += f" ({html.escape(normalize_date(str(row['date'])))})"
             lines.append(label)
         m.get_root().html.add_child(
             folium.Element(

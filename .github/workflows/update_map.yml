@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Shinylive export
         run: |
-          cp data/meetings_latest.csv shinylive_app/data/meetings_latest.csv
+          cp data/meetings_latest.csv data/last_run.txt shinylive_app/data/
           cp meeting_time.py shinylive_app/meeting_time.py
           python -c "from shinylive._export import export; export('shinylive_app', 'site/shinylive')"
 

@@ -10,10 +10,16 @@ from src.state import PipelineState
 
 
 def route_after_scrape(state: PipelineState):
-    """Fan out one extraction task per raw section."""
+    """Fan out one extraction task per raw section.
+
+    Rows already carrying an extraction (national meetings, parsed
+    deterministically in scrape) are skipped.
+    """
+    already_extracted = {m.row_id for m in state.get("meetings", [])}
     return [
         Send("extract_one", {"raw": raw, "feedback": [], "retry_count": 0})
         for raw in state["raw_sections"]
+        if raw["row_id"] not in already_extracted
     ]
 
 

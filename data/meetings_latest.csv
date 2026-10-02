@@ -1,4 +1,8 @@
 row_id,meeting_index,term,meeting_status,section,date,location,speakers,section_url,latitude,longitude,status,note
+national-0,0,fall,upcoming,MAA MathFest,"August 4-7, 2027","New Orleans, LA",,https://maa.org/event/mathfest/,29.9561422,-90.0733934,ok,
+national-0,1,fall,upcoming,MAA MathFest,"August 2-5, 2028","San Diego, CA",,https://maa.org/event/mathfest/,32.7157062,-117.1638284,ok,
+national-0,2,fall,upcoming,MAA MathFest,"August 8-11, 2029","Chicago, IL",,https://maa.org/event/mathfest/,41.8755616,-87.6244212,ok,
+national-0,3,fall,upcoming,MAA MathFest,"August 7-10, 2030","New York, NY",,https://maa.org/event/mathfest/,40.7127281,-74.0060152,ok,
 row-0,0,spring,past,ALLEGHENY MOUNTAIN,"March 27-28, 2026",Penn State - New Kensington,"Kathryn Kozak (Visitor), Della Dumbaugh, Candice Price (NAM)",https://www.alleghenymtn.maa.org/,40.5469094,-79.695263,ok,
 row-1,0,spring,past,EASTERN PA & DELAWARE,"April 11, 2026",Shippensburg University,"Paul Pasles, Ingrid Daubechies",http://sections.maa.org/epadel/,40.0612166,-77.5206291,ok,
 row-1,1,fall,current,EASTERN PA & DELAWARE,"November 14, 2026",Lehigh University,,http://sections.maa.org/epadel/,40.6068028,-75.3782488,ok,

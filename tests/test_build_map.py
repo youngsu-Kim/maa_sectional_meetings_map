@@ -1,6 +1,7 @@
 import csv
 from datetime import date
 
+from meeting_time import normalize_date
 from src.nodes.build_map import (
     build_map_node,
     current_term_label,
@@ -75,6 +76,8 @@ def test_term_classification():
     assert term_of("Dec. 4, 2026") == "fall"
     assert term_of("Oct. 30–31, 2026") == "fall"
     assert term_of("Sept. 12, 2026") == "fall"
+    assert term_of("August 4-7, 2027") == "fall"  # MathFest dates
+    assert term_of("July 10, 2027") == "fall"
     assert term_of("April 3, 2027") == "spring"
     assert term_of("March 27-28, 2026") == "spring"
     assert term_of("Feb 27, 2027") == "spring"
@@ -83,6 +86,7 @@ def test_term_classification():
     assert term_label("November 13-14, 2026") == "Fall 2026"
     assert term_label("April 3, 2027") == "Spring 2027"
     assert term_label("Dec. 4, 2026") == "Fall 2026"
+    assert term_label("August 4-7, 2027") == "Fall 2027"
 
 
 def test_meeting_status_buckets():
@@ -123,6 +127,20 @@ def test_past_current_upcoming_pins_get_distinct_colors(tmp_path):
     # CSV: one row per meeting with term and temporal bucket
     assert [r["term"] for r in csv_rows] == ["spring", "fall", "spring"]
     assert [r["meeting_status"] for r in csv_rows] == ["past", "current", "upcoming"]
+
+
+def test_normalize_date_abbreviates_months():
+    assert normalize_date("March 27-28, 2026") == "Mar 27-28, 2026"
+    assert normalize_date("November 13-14, 2026") == "Nov 13-14, 2026"
+    assert normalize_date("Feb. 20-21, 2026") == "Feb 20-21, 2026"
+    assert normalize_date("Sept. 12, 2026") == "Sep 12, 2026"
+    assert normalize_date("2026 Meeting Dates To Be Announced") == "2026 Meeting Dates To Be Announced"
+
+
+def test_popup_dates_are_abbreviated(tmp_path):
+    html, _ = _run(tmp_path, [dict(PAST_RECORD)])
+    assert "Mar 27-28, 2026" in html
+    assert "March 27-28, 2026" not in html
 
 
 def test_map_fits_to_markers_not_default_view(tmp_path):

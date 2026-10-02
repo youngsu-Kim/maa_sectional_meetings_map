@@ -7,15 +7,16 @@ SITE_DIR = ROOT / "site"
 FIXTURES_DIR = ROOT / "tests" / "fixtures"
 
 SOURCE_URL = "https://maa.org/section-meetings/"
+NATIONAL_EVENTS_URL = "https://maa.org/events/"
 GEOCODE_CACHE_PATH = DATA_DIR / "geocode_cache.csv"
 LOCATION_CORRECTIONS_PATH = DATA_DIR / "location_corrections.csv"
 SECTION_REGIONS_PATH = DATA_DIR / "section_regions.csv"
 MEETINGS_CSV_PATH = DATA_DIR / "meetings_latest.csv"
+LAST_RUN_PATH = DATA_DIR / "last_run.txt"
 MAP_PATH = SITE_DIR / "index.html"
 
 # Nominatim usage policy requires a descriptive User-Agent with contact info.
-# Replace the URL with your actual repository once published.
-USER_AGENT = "maa-sectional-meeting-map/1.0 (https://github.com/maa-sectional-meeting-map)"
+USER_AGENT = "maa-sectional-meeting-map/1.0 (https://github.com/youngsu-Kim/maa-sectional-meeting-map)"
 
 DEFAULT_MODEL = "groq:qwen/qwen3.8-27b"
 MAX_EXTRACTION_RETRIES = 2

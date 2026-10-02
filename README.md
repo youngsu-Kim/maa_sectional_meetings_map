@@ -4,6 +4,9 @@ A [LangGraph](https://langchain-ai.github.io/langgraph/) pipeline that scrapes t
 [MAA section meetings page](https://maa.org/section-meetings/), extracts structured
 meeting data with an LLM, geocodes the venues, and publishes an interactive
 [Folium](https://python-visualization.github.io/folium/) map to GitHub Pages.
+National meetings (currently [MAA MathFest](https://maa.org/event/mathfest/),
+found via the [events page](https://maa.org/events/)) are included: their
+structured event pages are parsed deterministically, no LLM needed.
 Sections listing multiple meetings (e.g. Fall 2026 and Spring 2027) get one pin
 per meeting, colored by time relative to the run date —
 **grey for past meetings, orange for the current term, green for upcoming

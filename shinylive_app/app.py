@@ -30,7 +30,7 @@ from meeting_time import (
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "meetings_latest.csv"
 SOURCE_URL = "https://maa.org/section-meetings/"
-REPO_URL = "https://github.com/youngsu-Kim/maa-sectional-meeting-map"
+REPO_URL = "https://github.com/youngsu-Kim/maa_sectional_meetings_map"
 
 STATUS_COLORS = {
     "past": "lightgray",     # light grey

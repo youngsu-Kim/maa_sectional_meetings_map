@@ -1,5 +1,5 @@
 [project]
-name = "maa-sectional-meeting-map"
+name = "maa-sectional-meetings-map"
 version = "0.1.0"
 description = "LangGraph pipeline: scrape MAA section meetings, extract with an LLM, geocode, publish a Folium map"
 readme = "README.md"

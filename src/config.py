@@ -17,7 +17,7 @@ LAST_RUN_PATH = DATA_DIR / "last_run.txt"
 MAP_PATH = SITE_DIR / "index.html"
 
 # Nominatim usage policy requires a descriptive User-Agent with contact info.
-USER_AGENT = "maa-sectional-meeting-map/1.0 (https://github.com/youngsu-Kim/maa-sectional-meeting-map)"
+USER_AGENT = "maa_sectional_meetings_map/1.0 (https://github.com/youngsu-Kim/maa_sectional_meetings_map)"
 
 DEFAULT_MODEL = "groq:qwen/qwen3.8-27b"
 MAX_EXTRACTION_RETRIES = 2

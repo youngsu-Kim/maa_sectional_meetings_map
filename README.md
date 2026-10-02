@@ -126,6 +126,9 @@ Required secret: `GROQ_API_KEY`.
 
 [MIT](LICENSE)
 
+Built upon the CC0-licensed static-map experiment originally committed to this
+repository in October 2025.
+
 ---
 
 Assisted by GLM-5.3-NVFP4, hosted on the National Research Platform.

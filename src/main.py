@@ -74,6 +74,7 @@ def _print_summary(state: dict, tracker=None) -> None:
     print(f"sections:          {len(state.get('raw_sections', []))}")
     print(f"extraction calls:  {total_attempts}")
     print(f"valid rows:        {len(state.get('merged', {})) - len(state.get('row_errors', {}))}")
+    print(f"meetings listed:   {len(state.get('geocoded', []))}")
     failed = state.get("failed_rows", [])
     print(f"failed rows:       {len(failed)}")
     for row_id in failed:

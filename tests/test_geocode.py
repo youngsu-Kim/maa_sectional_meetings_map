@@ -1,10 +1,9 @@
-import csv
 from pathlib import Path
 
 from src.nodes.geocode import geocode_node, load_cache, load_corrections, save_cache
-from src.schemas import SectionMeeting
+from src.schemas import Meeting, SectionMeetings
 
-from conftest import SEED_CACHE, golden_meeting
+from conftest import SEED_CACHE, golden_section
 
 
 def test_load_seed_cache():
@@ -38,8 +37,8 @@ def test_cache_round_trip(tmp_path):
     assert load_cache(path) == {"A University": (1.0, 2.0)}
 
 
-def _state(meetings, cache_path, dry_run=True, errors=None):
-    merged = {m.row_id: m for m in meetings}
+def _state(sections, cache_path, dry_run=True, errors=None):
+    merged = {s.row_id: s for s in sections}
     return {
         "merged": merged,
         "row_errors": errors or {},
@@ -53,7 +52,7 @@ def test_dry_run_uses_cache_and_skips_network(seeded_cache):
     before = seeded_cache.read_text(encoding="utf-8")
     result = geocode_node(
         _state(
-            [golden_meeting("row-0"), golden_meeting("row-2"), golden_meeting("row-10")],
+            [golden_section("row-0"), golden_section("row-2"), golden_section("row-10")],
             seeded_cache,
         )
     )
@@ -71,14 +70,45 @@ def test_dry_run_uses_cache_and_skips_network(seeded_cache):
     assert seeded_cache.read_text(encoding="utf-8") == before
 
 
+def test_each_meeting_gets_its_own_record(seeded_cache):
+    section = golden_section("row-0").model_copy(
+        update={
+            "meetings": [
+                Meeting(date="October 18, 2026", location="West Virginia University",
+                        speakers="Jane Doe"),
+                Meeting(date="April 3, 2027", location="Iowa State University",
+                        speakers="John Doe"),
+            ]
+        }
+    )
+    result = geocode_node(_state([section], seeded_cache))
+    records = result["geocoded"]
+    assert len(records) == 2
+    assert records[0]["meeting_index"] == 0
+    assert records[1]["meeting_index"] == 1
+    assert records[0]["latitude"] == 39.6348398
+    assert records[1]["latitude"] == 42.0279608
+    assert result["cache_hits"] == 2
+
+
 def test_invalid_rows_get_status(seeded_cache):
-    meeting = golden_meeting("row-1")
+    section = golden_section("row-1")
     result = geocode_node(
-        _state([meeting], seeded_cache, errors={"row-1": ["some problem"]})
+        _state([section], seeded_cache, errors={"row-1": ["some problem"]})
     )
     record = result["geocoded"][0]
     assert record["status"] == "invalid"
     assert record["latitude"] is None
+
+
+def test_invalid_section_without_meetings_still_recorded(seeded_cache):
+    section = SectionMeetings(row_id="row-1", section="EASTERN PA & DELAWARE", meetings=[])
+    result = geocode_node(
+        _state([section], seeded_cache, errors={"row-1": ["some problem"]})
+    )
+    record = result["geocoded"][0]
+    assert record["status"] == "invalid"
+    assert record["date"] == ""
 
 
 def test_live_geocode_resolves_and_saves(seeded_cache, monkeypatch):
@@ -95,7 +125,7 @@ def test_live_geocode_resolves_and_saves(seeded_cache, monkeypatch):
     monkeypatch.setattr("src.nodes.geocode.make_geocoder", fake_geocoder)
 
     result = geocode_node(
-        _state([golden_meeting("row-10")], seeded_cache, dry_run=False)
+        _state([golden_section("row-10")], seeded_cache, dry_run=False)
     )
     record = result["geocoded"][0]
     assert record["latitude"] == 30.2241
@@ -112,7 +142,7 @@ def test_live_geocode_unresolvable_counts_failure(seeded_cache, monkeypatch):
     monkeypatch.setattr("src.nodes.geocode.make_geocoder", fake_geocoder)
 
     result = geocode_node(
-        _state([golden_meeting("row-10")], seeded_cache, dry_run=False)
+        _state([golden_section("row-10")], seeded_cache, dry_run=False)
     )
     assert result["cache_failures"] == 1
     assert result["geocoded"][0]["latitude"] is None
@@ -131,6 +161,21 @@ def _write_corrections(tmp_path):
     return path
 
 
+def _creighton_section():
+    return SectionMeetings(
+        row_id="row-7",
+        section="IOWA",
+        section_url="",
+        meetings=[
+            Meeting(
+                date="Fall 2026",
+                location="Creighton University, Omaha, NB",
+                speakers="",
+            )
+        ],
+    )
+
+
 def test_correction_fixes_typo_and_keeps_note(tmp_path, monkeypatch):
     cache_path = tmp_path / "cache.csv"
     save_cache(cache_path, {})
@@ -144,13 +189,9 @@ def test_correction_fixes_typo_and_keeps_note(tmp_path, monkeypatch):
         "src.nodes.geocode.make_geocoder", lambda: (lambda location: FakePlace())
     )
 
-    meeting = SectionMeeting(
-        row_id="row-7", section="IOWA", date="Fall 2026",
-        location="Creighton University, Omaha, NB", speakers="", section_url="",
-    )
     result = geocode_node(
         {
-            "merged": {"row-7": meeting},
+            "merged": {"row-7": _creighton_section()},
             "row_errors": {},
             "dry_run": False,
             "cache_path": str(cache_path),
@@ -183,13 +224,9 @@ def test_correction_hits_cache_on_second_run(tmp_path, monkeypatch):
 
     monkeypatch.setattr("src.nodes.geocode.make_geocoder", boom)
 
-    meeting = SectionMeeting(
-        row_id="row-7", section="IOWA", date="Fall 2026",
-        location="Creighton University, Omaha, NB", speakers="", section_url="",
-    )
     result = geocode_node(
         {
-            "merged": {"row-7": meeting},
+            "merged": {"row-7": _creighton_section()},
             "row_errors": {},
             "dry_run": False,
             "cache_path": str(cache_path),

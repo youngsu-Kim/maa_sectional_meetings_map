@@ -4,6 +4,9 @@ A [LangGraph](https://langchain-ai.github.io/langgraph/) pipeline that scrapes t
 [MAA section meetings page](https://maa.org/section-meetings/), extracts structured
 meeting data with an LLM, geocodes the venues, and publishes an interactive
 [Folium](https://python-visualization.github.io/folium/) map to GitHub Pages.
+Sections listing multiple meetings (e.g. Fall 2026 and Spring 2027) get one pin
+per meeting — orange for fall, green for spring — and the view auto-fits the
+placed pins.
 
 ```
 scrape -> extract (fan-out) -> validate -> [retry] -> geocode -> build_map

@@ -10,7 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.fake_llm import normalize_row_id  # noqa: E402
-from src.schemas import SectionMeeting  # noqa: E402
+from src.schemas import Meeting, SectionMeetings  # noqa: E402
 
 FIXTURE_HTML = ROOT / "tests" / "fixtures" / "section_meetings.html"
 FIXTURE_HTML_WP = ROOT / "tests" / "fixtures" / "section_meetings_wp.html"
@@ -28,16 +28,28 @@ def load_golden() -> dict[str, dict]:
     return rows
 
 
-def golden_meeting(key: str) -> SectionMeeting:
+def golden_section(key: str) -> SectionMeetings:
+    """A valid single-meeting section built from the golden CSV."""
     row = load_golden()[normalize_row_id(key)]
-    return SectionMeeting(
+    return SectionMeetings(
         row_id=f"row-{normalize_row_id(key)}",
         section=row["Section"],
-        date=row["Date"],
-        location=row["Location"],
-        speakers=row["Speakers"],
         section_url=row["SectionURL"],
+        meetings=[
+            Meeting(
+                date=row["Date"],
+                location=row["Location"],
+                speakers=row["Speakers"],
+            )
+        ],
     )
+
+
+def with_meeting(section: SectionMeetings, index: int = 0, **overrides) -> SectionMeetings:
+    """Copy of the section with meeting fields overridden (e.g. location='...')."""
+    meetings = list(section.meetings)
+    meetings[index] = meetings[index].model_copy(update=overrides)
+    return section.model_copy(update={"meetings": meetings})
 
 
 class ScriptedFakeLLM:
@@ -47,7 +59,7 @@ class ScriptedFakeLLM:
         self.failures = failures or {}
         self.call_counts: dict[str, int] = defaultdict(int)
 
-    def invoke(self, prompt: str, config=None, **kwargs) -> SectionMeeting:
+    def invoke(self, prompt: str, config=None, **kwargs) -> SectionMeetings:
         from src.fake_llm import _ROW_ID_RE
 
         match = _ROW_ID_RE.search(prompt)
@@ -56,7 +68,7 @@ class ScriptedFakeLLM:
         script = self.failures.get(key, [])
         if self.call_counts[key] <= len(script):
             return script[self.call_counts[key] - 1]
-        return golden_meeting(key)
+        return golden_section(key)
 
 
 @pytest.fixture

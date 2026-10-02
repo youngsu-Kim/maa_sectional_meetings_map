@@ -3,7 +3,7 @@
 import csv
 import re
 
-from src.schemas import SectionMeeting
+from src.schemas import Meeting, SectionMeetings
 
 _ROW_ID_RE = re.compile(r"RowID is (row-[\w-]+)")
 
@@ -23,15 +23,19 @@ class GoldenCsvFakeLLM:
                 if key:
                     self.rows[key] = row
 
-    def invoke(self, prompt: str, config=None, **kwargs) -> SectionMeeting:
+    def invoke(self, prompt: str, config=None, **kwargs) -> SectionMeetings:
         match = _ROW_ID_RE.search(prompt)
         key = normalize_row_id(match.group(1)) if match else ""
         row = self.rows.get(key, {})
-        return SectionMeeting(
+        return SectionMeetings(
             row_id=f"row-{key}" if key else "",
             section=row.get("Section", ""),
-            date=row.get("Date", ""),
-            location=row.get("Location", ""),
-            speakers=row.get("Speakers", ""),
             section_url=row.get("SectionURL", ""),
+            meetings=[
+                Meeting(
+                    date=row.get("Date", ""),
+                    location=row.get("Location", ""),
+                    speakers=row.get("Speakers", ""),
+                )
+            ],
         )

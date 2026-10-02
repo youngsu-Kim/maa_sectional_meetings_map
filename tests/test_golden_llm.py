@@ -27,31 +27,35 @@ def test_extraction_matches_golden():
     from src.config import make_llm
     from src.nodes.extract import build_prompt
     from src.nodes.scrape import parse_sections
-    from src.schemas import SectionMeeting
+    from src.schemas import SectionMeetings
 
     sections = parse_sections(FIXTURE_HTML.read_text(encoding="utf-8"))
     method = os.environ.get("LLM_STRUCTURED_METHOD", "json_schema")
-    llm = make_llm().with_structured_output(SectionMeeting, method=method)
+    llm = make_llm().with_structured_output(SectionMeetings, method=method)
 
     extracted = {}
     for raw in sections:
-        meeting = llm.invoke(build_prompt(raw))
-        extracted[normalize_row_id(meeting.row_id)] = meeting
+        section = llm.invoke(build_prompt(raw))
+        extracted[normalize_row_id(section.row_id)] = section
 
     golden = load_golden()
     assert set(extracted) == set(golden), "row-id sets must match the golden CSV"
 
     structural = []
     textual = []
-    for key, meeting in extracted.items():
+    for key, section in extracted.items():
         expected = golden[key]
-        if meeting.section.casefold() != expected["Section"].casefold():
-            structural.append(f"{key}: section {meeting.section!r} != {expected['Section']!r}")
-        if _normalize_url(meeting.section_url) != _normalize_url(expected["SectionURL"]):
-            structural.append(f"{key}: url {meeting.section_url!r} != {expected['SectionURL']!r}")
+        if section.section.casefold() != expected["Section"].casefold():
+            structural.append(f"{key}: section {section.section!r} != {expected['Section']!r}")
+        if _normalize_url(section.section_url) != _normalize_url(expected["SectionURL"]):
+            structural.append(f"{key}: url {section.section_url!r} != {expected['SectionURL']!r}")
+        if not section.meetings:
+            structural.append(f"{key}: no meetings extracted")
+            continue
+        first = section.meetings[0]
         for field in ("date", "location", "speakers"):
-            got = getattr(meeting, field)
-            want = expected[field.capitalize()] if field != "url" else expected["SectionURL"]
+            got = getattr(first, field)
+            want = expected[field.capitalize()]
             if got.strip() != want.strip():
                 textual.append(f"{key}.{field}: {got!r} != {want!r}")
 

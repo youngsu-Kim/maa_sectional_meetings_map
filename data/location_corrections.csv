@@ -1,2 +1,5 @@
 location,corrected,reason
 "Creighton University, Omaha, NB","Creighton University, Omaha, NE",MAA page typo: NB is New Brunswick; Nebraska is NE
+"University of South Florida St. Petersberg","University of South Florida St. Petersburg",MAA page typo: Petersberg -> St. Petersburg
+"California State University, Seaside, CA","California State University Monterey Bay",campus is CSU Monterey Bay; Nominatim knows it under this name
+"Kalamazoo College and Western Michigan University","Kalamazoo College, Kalamazoo, MI",joint meeting at two campuses; pin placed at the first venue

@@ -1,7 +1,7 @@
 import operator
 from typing import Annotated, Any, TypedDict
 
-from src.schemas import SectionMeeting
+from src.schemas import SectionMeetings
 
 
 class RawSection(TypedDict):
@@ -39,12 +39,12 @@ class PipelineState(TypedDict, total=False):
     # scrape
     raw_sections: list[RawSection]
 
-    # extraction fan-out (each extract_one appends one meeting)
-    meetings: Annotated[list[SectionMeeting], operator.add]
+    # extraction fan-out (each extract_one appends one section bundle)
+    meetings: Annotated[list[SectionMeetings], operator.add]
     retry_counts: Annotated[dict[str, int], merge_dict]
 
     # validation
-    merged: dict[str, SectionMeeting]
+    merged: dict[str, SectionMeetings]
     row_errors: dict[str, list[str]]
     failed_rows: list[str]
 

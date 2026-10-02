@@ -2,6 +2,7 @@ import csv
 from pathlib import Path
 
 from src.config import GEOCODE_CACHE_PATH, LOCATION_CORRECTIONS_PATH, USER_AGENT
+from src.schemas import Meeting
 from src.state import PipelineState
 
 
@@ -70,56 +71,70 @@ def geocode_node(state: PipelineState) -> dict:
     applied: list[str] = []
     results: list[dict] = []
 
-    for row_id, meeting in merged.items():
-        record: dict = {"row_id": row_id, **meeting.model_dump()}
+    for row_id, section in merged.items():
+        section_invalid = row_id in errors
+        # An invalid section may carry no meetings; still emit one record so
+        # it shows up in the CSV and the map's side note.
+        meetings = section.meetings or [Meeting()]
 
-        if row_id in errors:
-            record.update(latitude=None, longitude=None, status="invalid", note="")
+        for index, meeting in enumerate(meetings):
+            record: dict = {
+                "row_id": row_id,
+                "meeting_index": index,
+                "section": section.section,
+                "date": meeting.date,
+                "location": meeting.location,
+                "speakers": meeting.speakers,
+                "section_url": section.section_url,
+            }
+
+            if section_invalid:
+                record.update(latitude=None, longitude=None, status="invalid", note="")
+                results.append(record)
+                continue
+
+            record["status"] = "ok"
+            location = meeting.location.strip()
+
+            if not location:
+                # TBA meetings have no location: never geocode, never guess.
+                record.update(latitude=None, longitude=None, note="")
+                results.append(record)
+                continue
+
+            # Known source-data typos: geocode the corrected string, but display
+            # the original text and keep a note of what was changed and why.
+            lookup, note = location, ""
+            if location in corrections:
+                corrected, reason = corrections[location]
+                lookup = corrected
+                note = f"geocoded as {corrected!r}" + (f" ({reason})" if reason else "")
+                applied.append(f"{row_id}: {location} -> {corrected}")
+
+            if lookup in cache:
+                hits += 1
+                record.update(latitude=cache[lookup][0], longitude=cache[lookup][1])
+            else:
+                misses += 1
+                coords = None
+                if not dry_run:
+                    if geocoder is None:
+                        geocoder = make_geocoder()
+                    try:
+                        found = geocoder(lookup)
+                        if found is not None:
+                            coords = (found.latitude, found.longitude)
+                    except Exception:  # noqa: BLE001 - geocode failures degrade to no marker
+                        coords = None
+                    if coords is None:
+                        failures += 1
+                    cache[lookup] = coords
+                    save_cache(cache_path, cache)  # incremental save: crash-safe
+                record.update(latitude=coords[0] if coords else None,
+                              longitude=coords[1] if coords else None)
+
+            record["note"] = note
             results.append(record)
-            continue
-
-        record["status"] = "ok"
-        location = meeting.location.strip()
-
-        if not location:
-            # TBA rows have no location: never geocode, never guess.
-            record.update(latitude=None, longitude=None, note="")
-            results.append(record)
-            continue
-
-        # Known source-data typos: geocode the corrected string, but display
-        # the original text and keep a note of what was changed and why.
-        lookup, note = location, ""
-        if location in corrections:
-            corrected, reason = corrections[location]
-            lookup = corrected
-            note = f"geocoded as {corrected!r}" + (f" ({reason})" if reason else "")
-            applied.append(f"{row_id}: {location} -> {corrected}")
-
-        if lookup in cache:
-            hits += 1
-            record.update(latitude=cache[lookup][0], longitude=cache[lookup][1])
-        else:
-            misses += 1
-            coords = None
-            if not dry_run:
-                if geocoder is None:
-                    geocoder = make_geocoder()
-                try:
-                    found = geocoder(lookup)
-                    if found is not None:
-                        coords = (found.latitude, found.longitude)
-                except Exception:  # noqa: BLE001 - geocode failures degrade to no marker
-                    coords = None
-                if coords is None:
-                    failures += 1
-                cache[lookup] = coords
-                save_cache(cache_path, cache)  # incremental save: crash-safe
-            record.update(latitude=coords[0] if coords else None,
-                          longitude=coords[1] if coords else None)
-
-        record["note"] = note
-        results.append(record)
 
     return {
         "geocoded": results,

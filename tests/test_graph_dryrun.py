@@ -1,17 +1,19 @@
 import csv
 
+from src.schemas import SectionMeetings
+
 from conftest import (
     FIXTURE_HTML,
     SEED_CACHE,
     ScriptedFakeLLM,
-    golden_meeting,
+    golden_section,
     run_graph,
 )
-from src.schemas import SectionMeeting
 
 
 def test_happy_path_full_graph(tmp_path):
     from src.nodes import extract as extract_mod
+    from src.graph import build_graph
 
     # start from the seed cache so cache hits are exercised
     cache_path = tmp_path / "geocode_cache.csv"
@@ -21,8 +23,6 @@ def test_happy_path_full_graph(tmp_path):
     fake = ScriptedFakeLLM()
     extract_mod.set_llm_factory(lambda: fake)
     try:
-        from src.graph import build_graph
-
         state = build_graph().invoke(
             {
                 "dry_run": True,
@@ -48,6 +48,8 @@ def test_happy_path_full_graph(tmp_path):
     assert state["cache_hits"] == 7
     assert state["cache_misses"] == 2
     assert state["cache_failures"] == 0
+    # one meeting per golden section
+    assert len(state["geocoded"]) == 29
 
     # dry-run never writes to the cache
     assert cache_path.read_text(encoding="utf-8") == before
@@ -66,7 +68,7 @@ def test_happy_path_full_graph(tmp_path):
 
 
 def test_retry_recovers_row_after_two_failures(tmp_path):
-    bad = golden_meeting("row-0").model_copy(update={"section": "WRONG SECTION"})
+    bad = golden_section("row-0").model_copy(update={"section": "WRONG SECTION"})
     fake = ScriptedFakeLLM(failures={"0": [bad, bad]})
     state = run_graph(fake, tmp_path, limit=3)
 
@@ -79,8 +81,10 @@ def test_retry_recovers_row_after_two_failures(tmp_path):
 
 
 def test_permanent_failure_is_isolated(tmp_path):
-    bad = SectionMeeting(
-        row_id="row-1", section="EASTERN PA & DELAWARE", location="<b>oops</b>"
+    bad = SectionMeetings(
+        row_id="row-1",
+        section="EASTERN PA & DELAWARE",
+        meetings=[],
     )
     fake = ScriptedFakeLLM(failures={"1": [bad, bad, bad]})
     state = run_graph(fake, tmp_path, limit=3)

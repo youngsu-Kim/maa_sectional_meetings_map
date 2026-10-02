@@ -164,3 +164,8 @@ def test_legend_present(tmp_path):
     assert "Past" in html
     assert "Current term (Fall 2026)" in html
     assert "Upcoming" in html
+
+
+def test_links_to_shinylive_app(tmp_path):
+    html, _ = _run(tmp_path, [dict(FALL_RECORD)])
+    assert 'href="shinylive/"' in html

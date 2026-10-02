@@ -31,6 +31,11 @@ _LEGEND_STYLE = (
     "background: rgba(255, 255, 255, 0.92); padding: 8px 12px; "
     "border: 1px solid #999; border-radius: 4px; font-size: 12px; line-height: 1.8;"
 )
+_LINK_STYLE = (
+    "position: fixed; top: 20px; left: 20px; z-index: 9999; "
+    "background: rgba(255, 255, 255, 0.92); padding: 8px 12px; "
+    "border: 1px solid #999; border-radius: 4px; font-size: 13px;"
+)
 
 
 def _popup(row) -> str:
@@ -114,6 +119,15 @@ def build_map_node(state: PipelineState) -> dict:
     )
     m.get_root().html.add_child(
         folium.Element(f'<div style="{_LEGEND_STYLE}">{legend}</div>')
+    )
+
+    # Cross-link to the Shinylive app (deployed next to this map on Pages).
+    m.get_root().html.add_child(
+        folium.Element(
+            f'<div style="{_LINK_STYLE}">'
+            f'<a href="shinylive/" target="_blank" rel="noopener noreferrer">'
+            f"Interactive version \u2192</a></div>"
+        )
     )
 
     csv_path.parent.mkdir(parents=True, exist_ok=True)

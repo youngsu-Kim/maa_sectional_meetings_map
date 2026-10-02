@@ -92,6 +92,15 @@ app_ui = ui.page_sidebar(
         ),
         ui.input_text("search", "Filter by section or location", ""),
         ui.output_ui("legend"),
+        ui.tags.p(
+            {"style": "font-size: 0.9em; margin-top: 12px;"},
+            ui.tags.a(
+                "\u2190 Static map",
+                href="../",
+                target="_blank",
+                rel="noopener noreferrer",
+            ),
+        ),
         width="280px",
     ),
     ui.layout_column_wrap(

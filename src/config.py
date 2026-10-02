@@ -8,6 +8,7 @@ FIXTURES_DIR = ROOT / "tests" / "fixtures"
 
 SOURCE_URL = "https://maa.org/section-meetings/"
 GEOCODE_CACHE_PATH = DATA_DIR / "geocode_cache.csv"
+LOCATION_CORRECTIONS_PATH = DATA_DIR / "location_corrections.csv"
 MEETINGS_CSV_PATH = DATA_DIR / "meetings_latest.csv"
 MAP_PATH = SITE_DIR / "index.html"
 

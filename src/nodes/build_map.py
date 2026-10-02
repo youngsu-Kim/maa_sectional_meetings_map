@@ -28,10 +28,14 @@ def build_map_node(state: PipelineState) -> dict:
     placed, unplaced = [], []
     for row in rows:
         if row.get("status") == "ok" and row.get("latitude") is not None:
+            note_line = ""
+            if row.get("note"):
+                note_line = f"<i>{html.escape(str(row['note']))}</i><br>"
             popup = (
                 f"<b>{html.escape(row['section'])}</b><br>"
                 f"{html.escape(str(row['date']))}<br>"
                 f"{html.escape(str(row['location']))}<br>"
+                f"{note_line}"
                 f"{html.escape(str(row['speakers']))}<br>"
                 f"<a href='{html.escape(row['section_url'])}' "
                 f"target='_blank' rel='noopener noreferrer'>"
@@ -63,13 +67,14 @@ def build_map_node(state: PipelineState) -> dict:
         writer = csv.writer(f)
         writer.writerow(
             ["row_id", "section", "date", "location", "speakers",
-             "section_url", "latitude", "longitude", "status"]
+             "section_url", "latitude", "longitude", "status", "note"]
         )
         for row in rows:
             writer.writerow(
                 [row["row_id"], row["section"], row["date"], row["location"],
                  row["speakers"], row["section_url"],
-                 row["latitude"], row["longitude"], row["status"]]
+                 row["latitude"], row["longitude"], row["status"],
+                 row.get("note", "")]
             )
 
     map_path.parent.mkdir(parents=True, exist_ok=True)

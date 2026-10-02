@@ -29,6 +29,7 @@ def test_happy_path_full_graph(tmp_path):
                 "fixture_path": str(FIXTURE_HTML),
                 "limit": 0,
                 "cache_path": str(cache_path),
+                "corrections_path": str(tmp_path / "corrections.csv"),
                 "map_path_out": str(tmp_path / "index.html"),
                 "csv_path_out": str(tmp_path / "meetings.csv"),
             },

@@ -80,6 +80,7 @@ def run_graph(fake_llm, tmp_path, limit=0):
                 "fixture_path": str(FIXTURE_HTML),
                 "limit": limit,
                 "cache_path": str(tmp_path / "geocode_cache.csv"),
+                "corrections_path": str(tmp_path / "corrections.csv"),
                 "map_path_out": str(tmp_path / "index.html"),
                 "csv_path_out": str(tmp_path / "meetings.csv"),
             },

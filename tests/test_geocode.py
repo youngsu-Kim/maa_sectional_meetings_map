@@ -1,4 +1,7 @@
-from src.nodes.geocode import geocode_node, load_cache, save_cache
+import csv
+from pathlib import Path
+
+from src.nodes.geocode import geocode_node, load_cache, load_corrections, save_cache
 from src.schemas import SectionMeeting
 
 from conftest import SEED_CACHE, golden_meeting
@@ -8,6 +11,24 @@ def test_load_seed_cache():
     cache = load_cache(SEED_CACHE)
     assert len(cache) == 7
     assert cache["West Virginia University"] == (39.6348398, -79.9542095)
+
+
+def test_load_corrections_missing_file(tmp_path):
+    assert load_corrections(tmp_path / "nope.csv") == {}
+
+
+def test_load_corrections(tmp_path):
+    path = tmp_path / "corrections.csv"
+    path.write_text(
+        'location,corrected,reason\n'
+        '"Creighton University, Omaha, NB","Creighton University, Omaha, NE",NB is New Brunswick\n',
+        encoding="utf-8",
+    )
+    corrections = load_corrections(path)
+    assert corrections["Creighton University, Omaha, NB"] == (
+        "Creighton University, Omaha, NE",
+        "NB is New Brunswick",
+    )
 
 
 def test_cache_round_trip(tmp_path):
@@ -24,6 +45,7 @@ def _state(meetings, cache_path, dry_run=True, errors=None):
         "row_errors": errors or {},
         "dry_run": dry_run,
         "cache_path": str(cache_path),
+        "corrections_path": str(Path(cache_path).parent / "corrections.csv"),
     }
 
 
@@ -96,3 +118,85 @@ def test_live_geocode_unresolvable_counts_failure(seeded_cache, monkeypatch):
     assert result["geocoded"][0]["latitude"] is None
     # unresolved locations are not persisted to the cache
     assert "University of Lafayette" not in load_cache(seeded_cache)
+
+
+def _write_corrections(tmp_path):
+    path = tmp_path / "corrections.csv"
+    path.write_text(
+        'location,corrected,reason\n'
+        '"Creighton University, Omaha, NB","Creighton University, Omaha, NE",'
+        "MAA page typo: NB is New Brunswick; Nebraska is NE\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_correction_fixes_typo_and_keeps_note(tmp_path, monkeypatch):
+    cache_path = tmp_path / "cache.csv"
+    save_cache(cache_path, {})
+    corrections_path = _write_corrections(tmp_path)
+
+    class FakePlace:
+        latitude = 41.2651
+        longitude = -95.9353
+
+    monkeypatch.setattr(
+        "src.nodes.geocode.make_geocoder", lambda: (lambda location: FakePlace())
+    )
+
+    meeting = SectionMeeting(
+        row_id="row-7", section="IOWA", date="Fall 2026",
+        location="Creighton University, Omaha, NB", speakers="", section_url="",
+    )
+    result = geocode_node(
+        {
+            "merged": {"row-7": meeting},
+            "row_errors": {},
+            "dry_run": False,
+            "cache_path": str(cache_path),
+            "corrections_path": str(corrections_path),
+        }
+    )
+
+    record = result["geocoded"][0]
+    # original text is preserved for display
+    assert record["location"] == "Creighton University, Omaha, NB"
+    # geocoded via the corrected string, with a visible note
+    assert record["latitude"] == 41.2651
+    assert "Omaha, NE" in record["note"]
+    assert "Nebraska is NE" in record["note"]
+    assert result["corrections_applied"] == [
+        "row-7: Creighton University, Omaha, NB -> Creighton University, Omaha, NE"
+    ]
+    # cached under the corrected key so future runs hit the cache
+    assert "Creighton University, Omaha, NE" in load_cache(cache_path)
+
+
+def test_correction_hits_cache_on_second_run(tmp_path, monkeypatch):
+    cache_path = tmp_path / "cache.csv"
+    save_cache(cache_path, {"Creighton University, Omaha, NE": (41.2651, -95.9353)})
+    corrections_path = _write_corrections(tmp_path)
+
+    # no geocoder allowed: everything must come from the cache
+    def boom():
+        raise AssertionError("geocoder must not be called")
+
+    monkeypatch.setattr("src.nodes.geocode.make_geocoder", boom)
+
+    meeting = SectionMeeting(
+        row_id="row-7", section="IOWA", date="Fall 2026",
+        location="Creighton University, Omaha, NB", speakers="", section_url="",
+    )
+    result = geocode_node(
+        {
+            "merged": {"row-7": meeting},
+            "row_errors": {},
+            "dry_run": False,
+            "cache_path": str(cache_path),
+            "corrections_path": str(corrections_path),
+        }
+    )
+    record = result["geocoded"][0]
+    assert record["latitude"] == 41.2651
+    assert result["cache_hits"] == 1
+    assert record["note"]  # the note is kept even on cache hits

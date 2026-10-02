@@ -80,6 +80,10 @@ def _print_summary(state: dict, tracker=None) -> None:
         print(f"  - {row_id}: {state['row_errors'].get(row_id)}")
     print(f"cache hits/misses: {state.get('cache_hits', 0)}/{state.get('cache_misses', 0)}"
           f" (unresolved: {state.get('cache_failures', 0)})")
+    corrections = state.get("corrections_applied", [])
+    print(f"corrections:       {len(corrections)}")
+    for item in corrections:
+        print(f"  - {item}")
     if tracker is not None:
         print(f"llm usage:         {tracker.report()}")
     print(f"map:               {state.get('map_path')}")

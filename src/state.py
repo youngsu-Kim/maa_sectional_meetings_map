@@ -32,6 +32,7 @@ class PipelineState(TypedDict, total=False):
     fixture_path: str
     limit: int
     cache_path: str
+    corrections_path: str
     map_path_out: str
     csv_path_out: str
 
@@ -52,6 +53,7 @@ class PipelineState(TypedDict, total=False):
     cache_hits: int
     cache_misses: int
     cache_failures: int
+    corrections_applied: list[str]
 
     # outputs
     map_path: str

@@ -1,30 +1,30 @@
-row_id,section,date,location,speakers,section_url,latitude,longitude,status
-row-0,ALLEGHENY MOUNTAIN,"March 27-28, 2026",Penn State - New Kensington,"Kathryn Kozak (Visitor), Della Dumbaugh, Candice Price (NAM)",https://www.alleghenymtn.maa.org/,40.5469094,-79.695263,ok
-row-1,EASTERN PA & DELAWARE,"April 11, 2026",Shippensburg University,"Paul Pasles, Ingrid Daubechies",http://sections.maa.org/epadel/,40.0612166,-77.5206291,ok
-row-2,FLORIDA,"Feb. 20-21, 2026",Florida State College,"Richard Cleary (Visitor), Dennis Runde, Steve Butler (Polya)",http://sections.maa.org/florida/,26.6137719,-80.0858653,ok
-row-3,GOLDEN,"March 7, 2026",Santa Clara University,"Bill Dunham, Frank Farris, Hannah Larson, and Cindy Wyels (Visitor)",http://sections.maa.org/golden/,37.3486243,-121.936544,ok
-row-4,ILLINOIS,"March 27-28, 2026",University of Illinois-Springfield,"Lauren Keough (AWM), Paul Blanchard Visitor), Hei-Chi Chan, Paul Sirvatka",http://sections.maa.org/illinois/,39.7288145,-89.6172915,ok
-row-5,INDIANA,"April 10-11, 2026",Purdue University-Fort Wayne,"Noelle Sawyer (AWM), Mark Daniel Ward, John Rickert",https://www.indiana.maa.org/,41.1195851,-85.1057072,ok
-row-6,INTERMOUNTAIN,"March 27-28, 2026",Brigham Young University,"Ben Woodruff, Lauralea Otis, Robert Lang",https://www.intermountain.maa.org/,40.2498073,-111.6499458,ok
-row-7,IOWA,"November 13-14, 2026","Creighton University, Omaha, NB",,https://www.iowa.maa.org/,,,ok
-row-8,KANSAS,"March 27-28, 2026",Fort Hays State University,"Opel Jones (NAM), Hortensia Soto (Visitor)",https://www.kansas.maa.org/,38.8706832,-99.3442115,ok
-row-9,KENTUCKY,"April 10-11, 2026",Thomas More University,"Ranthony Clark (AWM), Dhanuja Kasturiratna",https://www.kentucky.maa.org/,39.0209185,-84.5676956,ok
-row-10,LOUISIANA-MISSISSIPPI,"February 26-28, 2026",University of Lafayette,"Richard Cleary (Visitor), Lauren Keough (AWM), Doug Ensley",https://www.la-ms.maa.org/2026-meeting,40.724044,-73.9961681,ok
-row-11,MD-DC-VA,"Apr. 24–25, 2026",Frederick County Community College,"Opel Jones (NAM), Alexander Diaz-Lopez",http://sections.maa.org/mddcva/,39.451578,-77.4181668,ok
-row-12,METROPOLITAN NEW YORK,"May 2, 2026",St. Thomas Aquinas College,"Tamara Lakins (Visitor), Po-Shen Loh (Polya)",http://sections.maa.org/metrony/,-38.0830928,145.6224895,ok
-row-13,MICHIGAN,"March 27-28, 2026",Saginaw Valley State University,"Olivier Heubo-Kwengna, Steven Tuckey, Steven Butler (Polya)",http://sections.maa.org/michigan/,43.5158881,-83.9593131,ok
-row-14,MISSOURI,"March 26-28, 2026",Columbia College,"Stephen Montgomery-Smith, Smita Praharaj",http://sections.maa.org/missouri/,41.8753862,-87.6265202,ok
-row-15,NEBRASKA - SOUTHEAST SOUTH DAKOTA,"April 11-12, 2026",Creighton University,Steve Butler (Polya),https://www.nesesd.maa.org/events,41.2658565,-95.9450555,ok
-row-16,NEW JERSEY,"March 28, 2026",Ramapo College of New Jersey,"Victor Piercey (Visitor), Kathleen Almy, Kariane Calta",http://sections.maa.org/newjersey/Main/Home.html,41.0822446,-74.1738235,ok
-row-17,NORTH CENTRAL,"March 27-28, 2026","St. Cloud State University, St. Cloud, MN","Annalisa Crannell (Visitor), Yariana Diaz",https://www.northcentral.maa.org/maa-ncs-spring-2026-meeting,45.549977,-94.1514779,ok
-row-18,NORTHEASTERN,"May 29-30, 2026","Massachusetts Maritime Academy, MA","Richard Cleary (Visitor), Sam Habach, Francis Su (Polya)",https://www.northeastern.maa.org/,41.7403399,-70.6241581,ok
-row-19,OHIO,"March 20-21, 2026","John Carroll University, OH","Jenna Carpenter (Visitor), Thomas LaFramboise, Robert Kassouf-Short",https://www.ohio.maa.org/,41.490381,-81.5287587,ok
-row-20,OKLAHOMA-ARKANSAS,"April 9-11, 2026",University of Arkansas Little Rock,"Rick Cleary (Visitor), Brett Jefferson (NAM)",http://sections.maa.org/okar/,34.7223681,-92.3383026,ok
-row-21,PACIFIC NORTHWEST,"April 17-18, 2026","Linfield University, McMinnville, OR","Pamela Harris (Polya), Steve Butler (Polya), and Lisa Marano (Visitor)",http://sections.maa.org/pnw/,45.1984734,-123.1981384,ok
-row-22,ROCKY MOUNTAIN,"April 17-18, 2026",Colorado Mesa University,"Francis Su (Polya), Audrey Malagon (Visitor), Hortensia Soto (Visitor), Forest Mannan",https://www.rockymountain.maa.org/,39.0819157,-108.5559956,ok
-row-23,SEAWAY,"April 17 - 18, 2026",St. Fisher University,"Susan Loepp, Chantal Buteau, Judith Covington (Visitor), Kelly Delp",https://maaseaway.org/,25.1036562,55.1624439,ok
-row-24,SOUTHEASTERN,"March 26-28, 2026",University of North Alabama,Hortensia Soto (Visitor),https://southeastern.maa.org/,34.8076805,-87.6817474,ok
-row-25,SOUTHERN CALIFORNIA - NEVADA,"March 28, 2026",University of Southern California,Thomas Murphy,http://sections.maa.org/socalnv/,34.021869,-118.2858579,ok
-row-26,SOUTHWESTERN,"March 27-28, 2026",Paradise Valley Community College,"Tab Hashim, Liz Arnold",https://www.southwestern.maa.org/,33.6514888,-112.0106503,ok
-row-27,TEXAS,"March 27-28, 2026","Baylor University, TX","Pamela Harris (Polya), Priya Prisad, Noelle Sawyer (AWM)",http://sections.maa.org/texas/,31.5504341,-97.1102906,ok
-row-28,WISCONSIN,"April 10-11, 2026",University of Wisconsin—River Falls,"Lauren Keough (AWM), Erick Hofacker, Victor Piercey (Visitor)",https://www.wisconsin.maa.org/,44.8481427,-92.6193599,ok
+row_id,section,date,location,speakers,section_url,latitude,longitude,status,note
+row-0,ALLEGHENY MOUNTAIN,"March 27-28, 2026",Penn State - New Kensington,"Kathryn Kozak (Visitor), Della Dumbaugh, Candice Price (NAM)",https://www.alleghenymtn.maa.org/,40.5469094,-79.695263,ok,
+row-1,EASTERN PA & DELAWARE,"April 11, 2026",Shippensburg University,"Paul Pasles, Ingrid Daubechies",http://sections.maa.org/epadel/,40.0612166,-77.5206291,ok,
+row-2,FLORIDA,"Feb. 20-21, 2026",Florida State College,"Richard Cleary (Visitor), Dennis Runde, Steve Butler (Polya)",http://sections.maa.org/florida/,26.6137719,-80.0858653,ok,
+row-3,GOLDEN,"March 7, 2026",Santa Clara University,"Bill Dunham, Frank Farris, Hannah Larson, and Cindy Wyels (Visitor)",http://sections.maa.org/golden/,37.3486243,-121.936544,ok,
+row-4,ILLINOIS,"March 27-28, 2026",University of Illinois-Springfield,"Lauren Keough (AWM), Paul Blanchard Visitor), Hei-Chi Chan, Paul Sirvatka",http://sections.maa.org/illinois/,39.7288145,-89.6172915,ok,
+row-5,INDIANA,"April 10-11, 2026",Purdue University-Fort Wayne,"Noelle Sawyer (AWM), Mark Daniel Ward, John Rickert",https://www.indiana.maa.org/,41.1195851,-85.1057072,ok,
+row-6,INTERMOUNTAIN,"March 27-28, 2026",Brigham Young University,"Ben Woodruff, Lauralea Otis, Robert Lang",https://www.intermountain.maa.org/,40.2498073,-111.6499458,ok,
+row-7,IOWA,"November 13-14, 2026","Creighton University, Omaha, NB",,https://www.iowa.maa.org/,41.2658565,-95.9450555,ok,"geocoded as 'Creighton University, Omaha, NE' (MAA page typo: NB is New Brunswick; Nebraska is NE)"
+row-8,KANSAS,"March 27-28, 2026",Fort Hays State University,"Opel Jones (NAM), Hortensia Soto (Visitor)",https://www.kansas.maa.org/,38.8706832,-99.3442115,ok,
+row-9,KENTUCKY,"April 10-11, 2026",Thomas More University,"Ranthony Clark (AWM), Dhanuja Kasturiratna",https://www.kentucky.maa.org/,39.0209185,-84.5676956,ok,
+row-10,LOUISIANA-MISSISSIPPI,"February 26-28, 2026",University of Lafayette,"Richard Cleary (Visitor), Lauren Keough (AWM), Doug Ensley",https://www.la-ms.maa.org/2026-meeting,40.724044,-73.9961681,ok,
+row-11,MD-DC-VA,"Apr. 24–25, 2026",Frederick County Community College,"Opel Jones (NAM), Alexander Diaz-Lopez",http://sections.maa.org/mddcva/,39.451578,-77.4181668,ok,
+row-12,METROPOLITAN NEW YORK,"May 2, 2026",St. Thomas Aquinas College,"Tamara Lakins (Visitor), Po-Shen Loh (Polya)",http://sections.maa.org/metrony/,-38.0830928,145.6224895,ok,
+row-13,MICHIGAN,"March 27-28, 2026",Saginaw Valley State University,"Olivier Heubo-Kwengna, Steven Tuckey, Steven Butler (Polya)",http://sections.maa.org/michigan/,43.5158881,-83.9593131,ok,
+row-14,MISSOURI,"March 26-28, 2026",Columbia College,"Stephen Montgomery-Smith, Smita Praharaj",http://sections.maa.org/missouri/,41.8753862,-87.6265202,ok,
+row-15,NEBRASKA - SOUTHEAST SOUTH DAKOTA,"April 11-12, 2026",Creighton University,Steve Butler (Polya),https://www.nesesd.maa.org/events,41.2658565,-95.9450555,ok,
+row-16,NEW JERSEY,"March 28, 2026",Ramapo College of New Jersey,"Victor Piercey (Visitor), Kathleen Almy, Kariane Calta",http://sections.maa.org/newjersey/Main/Home.html,41.0822446,-74.1738235,ok,
+row-17,NORTH CENTRAL,"March 27-28, 2026","St. Cloud State University, St. Cloud, MN","Annalisa Crannell (Visitor), Yariana Diaz",https://www.northcentral.maa.org/maa-ncs-spring-2026-meeting,45.549977,-94.1514779,ok,
+row-18,NORTHEASTERN,"May 29-30, 2026","Massachusetts Maritime Academy, MA","Richard Cleary (Visitor), Sam Habach, Francis Su (Polya)",https://www.northeastern.maa.org/,41.7403399,-70.6241581,ok,
+row-19,OHIO,"March 20-21, 2026","John Carroll University, OH","Jenna Carpenter (Visitor), Thomas LaFramboise, Robert Kassouf-Short",https://www.ohio.maa.org/,41.490381,-81.5287587,ok,
+row-20,OKLAHOMA-ARKANSAS,"April 9-11, 2026",University of Arkansas Little Rock,"Rick Cleary (Visitor), Brett Jefferson (NAM)",http://sections.maa.org/okar/,34.7223681,-92.3383026,ok,
+row-21,PACIFIC NORTHWEST,"April 17-18, 2026","Linfield University, McMinnville, OR","Pamela Harris (Polya), Steve Butler (Polya), and Lisa Marano (Visitor)",http://sections.maa.org/pnw/,45.1984734,-123.1981384,ok,
+row-22,ROCKY MOUNTAIN,"April 17-18, 2026",Colorado Mesa University,"Francis Su (Polya), Audrey Malagon (Visitor), Hortensia Soto (Visitor), Forest Mannan",https://www.rockymountain.maa.org/,39.0819157,-108.5559956,ok,
+row-23,SEAWAY,"April 17 - 18, 2026",St. Fisher University,"Susan Loepp, Chantal Buteau, Judith Covington (Visitor), Kelly Delp",https://maaseaway.org/,25.1036562,55.1624439,ok,
+row-24,SOUTHEASTERN,"March 26-28, 2026",University of North Alabama,Hortensia Soto (Visitor),https://southeastern.maa.org/,34.8076805,-87.6817474,ok,
+row-25,SOUTHERN CALIFORNIA - NEVADA,"March 28, 2026",University of Southern California,Thomas Murphy,http://sections.maa.org/socalnv/,34.021869,-118.2858579,ok,
+row-26,SOUTHWESTERN,"March 27-28, 2026",Paradise Valley Community College,"Tab Hashim, Liz Arnold",https://www.southwestern.maa.org/,33.6514888,-112.0106503,ok,
+row-27,TEXAS,"March 27-28, 2026","Baylor University, TX","Pamela Harris (Polya), Priya Prisad, Noelle Sawyer (AWM)",http://sections.maa.org/texas/,31.5504341,-97.1102906,ok,
+row-28,WISCONSIN,"April 10-11, 2026",University of Wisconsin—River Falls,"Lauren Keough (AWM), Erick Hofacker, Victor Piercey (Visitor)",https://www.wisconsin.maa.org/,44.8481427,-92.6193599,ok,

@@ -1,9 +1,15 @@
 from pathlib import Path
 
-from src.nodes.geocode import geocode_node, load_cache, load_corrections, save_cache
+from src.nodes.geocode import (
+    geocode_node,
+    load_cache,
+    load_corrections,
+    load_section_regions,
+    save_cache,
+)
 from src.schemas import Meeting, SectionMeetings
 
-from conftest import SEED_CACHE, golden_section
+from conftest import SEED_CACHE, golden_section, load_golden
 
 
 def test_load_seed_cache():
@@ -117,7 +123,7 @@ def test_live_geocode_resolves_and_saves(seeded_cache, monkeypatch):
         longitude = -92.0198
 
     def fake_geocoder():
-        def geocode(location):
+        def geocode(location, **kwargs):
             return FakePlace() if "Lafayette" in location else None
 
         return geocode
@@ -137,7 +143,7 @@ def test_live_geocode_resolves_and_saves(seeded_cache, monkeypatch):
 
 def test_live_geocode_unresolvable_counts_failure(seeded_cache, monkeypatch):
     def fake_geocoder():
-        return lambda location: None
+        return lambda location, **kwargs: None
 
     monkeypatch.setattr("src.nodes.geocode.make_geocoder", fake_geocoder)
 
@@ -186,7 +192,7 @@ def test_correction_fixes_typo_and_keeps_note(tmp_path, monkeypatch):
         longitude = -95.9353
 
     monkeypatch.setattr(
-        "src.nodes.geocode.make_geocoder", lambda: (lambda location: FakePlace())
+        "src.nodes.geocode.make_geocoder", lambda: (lambda location, **kwargs: FakePlace())
     )
 
     result = geocode_node(
@@ -211,6 +217,109 @@ def test_correction_fixes_typo_and_keeps_note(tmp_path, monkeypatch):
     ]
     # cached under the corrected key so future runs hit the cache
     assert "Creighton University, Omaha, NE" in load_cache(cache_path)
+
+
+def test_load_section_regions_parses_viewbox(tmp_path):
+    path = tmp_path / "regions.csv"
+    path.write_text(
+        "section,country_codes,viewbox\n"
+        'SEAWAY,"us,ca",\n'
+        'METROPOLITAN NEW YORK,us,"-74.6,40.3,-71.5,41.9"\n',
+        encoding="utf-8",
+    )
+    regions = load_section_regions(path)
+    assert regions["SEAWAY"] == {"country_codes": "us,ca", "viewbox": None}
+    assert regions["METROPOLITAN NEW YORK"] == {
+        "country_codes": "us",
+        "viewbox": ((41.9, -74.6), (40.3, -71.5)),
+    }
+
+
+def test_regions_file_covers_all_sections():
+    """Every known MAA section must have a region entry (catches CSV typos)."""
+    from src.config import SECTION_REGIONS_PATH
+
+    regions = load_section_regions(SECTION_REGIONS_PATH)
+    golden = load_golden()
+    missing = [row["Section"] for row in golden.values() if row["Section"] not in regions]
+    assert not missing, f"sections missing from section_regions.csv: {missing}"
+    # sections spanning the border need both countries
+    assert regions["SEAWAY"]["country_codes"] == "us,ca"
+    assert regions["PACIFIC NORTHWEST"]["country_codes"] == "us,ca"
+
+
+def _region_recorder(calls):
+    def fake_geocoder():
+        def geocode(location, **kwargs):
+            calls.append((location, kwargs))
+            return None
+
+        return geocode
+
+    return fake_geocoder
+
+
+def test_geocode_is_region_aware(tmp_path, monkeypatch):
+    """Venue lookups carry the section's country codes / viewbox."""
+    from src.config import SECTION_REGIONS_PATH
+
+    calls: list = []
+    monkeypatch.setattr("src.nodes.geocode.make_geocoder", _region_recorder(calls))
+
+    regions_path = tmp_path / "regions.csv"
+    regions_path.write_text(
+        "section,country_codes,viewbox\n"
+        'SEAWAY,"us,ca",\n'
+        'METROPOLITAN NEW YORK,us,"-74.6,40.3,-71.5,41.9"\n',
+        encoding="utf-8",
+    )
+    seaway = SectionMeetings(
+        row_id="row-23", section="SEAWAY",
+        meetings=[Meeting(date="April 17, 2026", location="St. John Fisher University")],
+    )
+    metrony = SectionMeetings(
+        row_id="row-12", section="METROPOLITAN NEW YORK",
+        meetings=[Meeting(date="May 2, 2026", location="Saint Thomas Aquinas College")],
+    )
+
+    geocode_node(
+        {
+            "merged": {"row-23": seaway, "row-12": metrony},
+            "row_errors": {},
+            "dry_run": False,
+            "cache_path": str(tmp_path / "cache.csv"),
+            "corrections_path": str(tmp_path / "corrections.csv"),
+            "regions_path": str(regions_path),
+        }
+    )
+
+    by_location = {loc: kwargs for loc, kwargs in calls}
+    assert by_location["St. John Fisher University"]["country_codes"] == "us,ca"
+    metro_kwargs = by_location["Saint Thomas Aquinas College"]
+    assert metro_kwargs["country_codes"] == "us"
+    assert metro_kwargs["bounded"] is True
+    assert metro_kwargs["viewbox"] == ((41.9, -74.6), (40.3, -71.5))
+
+
+def test_unknown_section_falls_back_to_us(tmp_path, monkeypatch):
+    calls: list = []
+    monkeypatch.setattr("src.nodes.geocode.make_geocoder", _region_recorder(calls))
+
+    unknown = SectionMeetings(
+        row_id="row-99", section="SOME NEW SECTION",
+        meetings=[Meeting(date="May 2, 2026", location="Some College")],
+    )
+    geocode_node(
+        {
+            "merged": {"row-99": unknown},
+            "row_errors": {},
+            "dry_run": False,
+            "cache_path": str(tmp_path / "cache.csv"),
+            "corrections_path": str(tmp_path / "corrections.csv"),
+            "regions_path": str(tmp_path / "nope.csv"),
+        }
+    )
+    assert calls and calls[0][1]["country_codes"] == "us"
 
 
 def test_correction_hits_cache_on_second_run(tmp_path, monkeypatch):

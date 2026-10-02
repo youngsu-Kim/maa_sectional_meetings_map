@@ -1,9 +1,17 @@
 import csv
 from pathlib import Path
 
-from src.config import GEOCODE_CACHE_PATH, LOCATION_CORRECTIONS_PATH, USER_AGENT
+from src.config import (
+    GEOCODE_CACHE_PATH,
+    LOCATION_CORRECTIONS_PATH,
+    SECTION_REGIONS_PATH,
+    USER_AGENT,
+)
 from src.schemas import Meeting
 from src.state import PipelineState
+
+# Sections not listed in section_regions.csv geocode US-only by default.
+REGION_DEFAULT = {"country_codes": "us", "viewbox": None}
 
 
 def load_corrections(path) -> dict[str, tuple[str, str]]:
@@ -20,6 +28,51 @@ def load_corrections(path) -> dict[str, tuple[str, str]]:
             if original and corrected:
                 corrections[original] = (corrected, reason)
     return corrections
+
+
+def load_section_regions(path) -> dict[str, dict]:
+    """Per-section geocoding regions: section -> {country_codes, viewbox}.
+
+    Host venues are almost always inside the section's territory, so
+    ambiguous venue names ("St. Thomas Aquinas College" exists on several
+    continents) must be resolved within the section's region. The optional
+    viewbox (min_lon, min_lat, max_lon, max_lat) adds a hard bound for
+    sections where the country alone is still too wide.
+    """
+    regions: dict[str, dict] = {}
+    p = Path(path)
+    if not p.exists():
+        return regions
+    with open(p, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            section = (row.get("section") or "").strip()
+            country_codes = (row.get("country_codes") or "").strip()
+            if not section:
+                continue
+            viewbox = None
+            raw_box = (row.get("viewbox") or "").strip()
+            if raw_box:
+                try:
+                    min_lon, min_lat, max_lon, max_lat = (
+                        float(v) for v in raw_box.split(",")
+                    )
+                    # geopy takes two opposite corners as (lat, lon) pairs.
+                    viewbox = ((max_lat, min_lon), (min_lat, max_lon))
+                except ValueError:
+                    continue
+            regions[section] = {
+                "country_codes": country_codes or REGION_DEFAULT["country_codes"],
+                "viewbox": viewbox,
+            }
+    return regions
+
+
+def _geocode_kwargs(region: dict) -> dict:
+    kwargs: dict = {"country_codes": region["country_codes"]}
+    if region.get("viewbox"):
+        kwargs["viewbox"] = region["viewbox"]
+        kwargs["bounded"] = True
+    return kwargs
 
 
 def load_cache(path) -> dict[str, tuple[float, float]]:
@@ -64,6 +117,9 @@ def geocode_node(state: PipelineState) -> dict:
     corrections = load_corrections(
         state.get("corrections_path", LOCATION_CORRECTIONS_PATH)
     )
+    regions = load_section_regions(
+        state.get("regions_path", SECTION_REGIONS_PATH)
+    )
 
     cache = load_cache(cache_path)
     geocoder = None
@@ -73,6 +129,7 @@ def geocode_node(state: PipelineState) -> dict:
 
     for row_id, section in merged.items():
         section_invalid = row_id in errors
+        region = regions.get(section.section, REGION_DEFAULT)
         # An invalid section may carry no meetings; still emit one record so
         # it shows up in the CSV and the map's side note.
         meetings = section.meetings or [Meeting()]
@@ -121,7 +178,10 @@ def geocode_node(state: PipelineState) -> dict:
                     if geocoder is None:
                         geocoder = make_geocoder()
                     try:
-                        found = geocoder(lookup)
+                        # Region-aware: venues resolve inside the section's
+                        # territory (e.g. 'St. Thomas Aquinas College' is on
+                        # three continents; only one is near New York).
+                        found = geocoder(lookup, **_geocode_kwargs(region))
                         if found is not None:
                             coords = (found.latitude, found.longitude)
                     except Exception:  # noqa: BLE001 - geocode failures degrade to no marker

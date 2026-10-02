@@ -124,6 +124,13 @@ app_ui = ui.page_sidebar(
             selected=list(STATUS_LABELS),
         ),
         ui.input_text("search", "Filter by section or location", ""),
+        ui.input_radio_buttons(
+            "sortby",
+            "Sort table by",
+            choices={"date": "Date", "section": "Section"},
+            selected="date",
+            inline=True,
+        ),
         ui.tags.p(
             {"style": "font-size: 0.9em; margin-top: 12px;"},
             ui.tags.a(
@@ -177,7 +184,11 @@ def server(input, output, session):
     def table():
         view = filtered().copy()
         view["__sort"] = view["date"].map(lambda d: meeting_sort_key(str(d)))
-        view = view.sort_values("__sort").drop(columns="__sort")
+        if input.sortby() == "section":
+            view = view.sort_values(["section", "__sort"])
+        else:
+            view = view.sort_values("__sort")
+        view = view.drop(columns="__sort")
 
         head = ui.tags.thead(
             ui.tags.tr(

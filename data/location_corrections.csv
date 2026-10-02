@@ -3,3 +3,5 @@ location,corrected,reason
 "University of South Florida St. Petersberg","University of South Florida St. Petersburg",MAA page typo: Petersberg -> St. Petersburg
 "California State University, Seaside, CA","California State University Monterey Bay",campus is CSU Monterey Bay; Nominatim knows it under this name
 "Kalamazoo College and Western Michigan University","Kalamazoo College, Kalamazoo, MI",joint meeting at two campuses; pin placed at the first venue
+"St. Fisher University","St. John Fisher University",MAA page typo: St. John Fisher University, Rochester, NY
+"St. Thomas Aquinas College","Saint Thomas Aquinas College",OSM records the Sparkill NY campus as "Saint Thomas Aquinas College"; the "St." spelling only matches a college in California

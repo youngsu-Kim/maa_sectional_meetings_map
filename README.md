@@ -47,8 +47,14 @@ python -m src.main --fixture tests/fixtures/section_meetings.html  # scrape from
 ```
 
 Outputs: `site/index.html` (the map) and `data/meetings_latest.csv`.
-`data/geocode_cache.csv` caches venue coordinates so repeated runs stay within
-the [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/).
+Geocoding is region-aware: `data/section_regions.csv` maps each MAA section
+to the country codes (and optionally a bounding box) of its territory, so
+ambiguous venue names resolve inside the section's region — e.g. "St. Thomas
+Aquinas College" exists in Australia and California, but Metro New York's
+campus is in Sparkill, NY. Sections spanning the US-Canada border (Seaway,
+Pacific Northwest) search `us,ca`. Unlisted sections default to `us`.
+`data/geocode_cache.csv` caches venue coordinates so repeated runs stay
+within the [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/).
 `data/location_corrections.csv` lists known typos on the MAA page (e.g.
 "Omaha, NB" for Nebraska): the corrected string is used for geocoding while
 the original text and an explanatory note are kept on the map and in the CSV.

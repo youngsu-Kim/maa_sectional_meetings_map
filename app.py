@@ -182,19 +182,23 @@ _SECTION_CHOICES = ["All"] + sorted(_MEETINGS["section"].unique())
 
 app_ui = ui.page_sidebar(
     ui.sidebar(
+        {"style": "font-size: 0.85em;"},
+        # Bootstrap sets rem-based sizes on headings and selects, which ignore
+        # the parent's em; force them to inherit the sidebar's uniform size.
+        ui.tags.style(
+            "aside h3, aside select.form-select, aside select.shiny-input-select "
+            "{ font-size: inherit; }"
+        ),
         ui.h3("MAA Sectional Meetings"),
         ui.p(
-            {"style": "font-size: 0.85em;"},
-            ui.em(
-                "Unofficial extract; visit the ",
-                ui.tags.a(
-                    "MAA webpage",
-                    href=SOURCE_URL,
-                    target="_blank",
-                    rel="noopener noreferrer",
-                ),
-                " for details",
+            "Unofficial extract; visit the ",
+            ui.tags.a(
+                "MAA webpage",
+                href=SOURCE_URL,
+                target="_blank",
+                rel="noopener noreferrer",
             ),
+            " for details",
             *(
                 [ui.tags.br(), _collected_line()]
                 if _collected_line()
@@ -222,8 +226,8 @@ app_ui = ui.page_sidebar(
         ),
         ui.tags.hr(),
         ui.p(
-            {"style": "font-size: 0.85em; margin-bottom: 0;"},
-            "Maintained by ",
+            {"style": "margin-bottom: 0;"},
+            "Created/Maintained by ",
             ui.tags.a(
                 "Youngsu Kim",
                 href=REPO_URL,

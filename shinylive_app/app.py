@@ -40,10 +40,10 @@ STATUS_COLORS = {
 }
 
 STATUS_LABELS = {
-    "past": "Past",
     "current": "Current term",
     "upcoming": "Upcoming",
     "mathfest": "MathFest",
+    "past": "Past",
 }
 
 # Speaker-program tags from the MAA page, color-coded in the table and popups.
@@ -151,11 +151,11 @@ def build_map(view: pd.DataFrame) -> folium.Map:
             ]
         )
     legend = (
-        '<span style="color:lightgray;">&#9679;</span> Past&nbsp;&nbsp;'
         f'<span style="color:orange;">&#9679;</span> '
         f'Current term ({current_term_label()})&nbsp;&nbsp;'
         '<span style="color:green;">&#9679;</span> Upcoming&nbsp;&nbsp;'
-        '<span style="color:darkpurple;">&#9679;</span> MathFest'
+        '<span style="color:darkpurple;">&#9679;</span> MathFest&nbsp;&nbsp;'
+        '<span style="color:lightgray;">&#9679;</span> Past'
     )
     m.get_root().html.add_child(
         folium.Element(f'<div style="{_LEGEND_STYLE}">{legend}</div>')
@@ -178,19 +178,24 @@ def _collected_line() -> str | None:
     return f"Data collected: {d.strftime('%b')} {d.day}, {d.year}"
 
 
+_MEETINGS = load_meetings()
+_SECTION_CHOICES = ["All"] + sorted(_MEETINGS["section"].unique())
+
 app_ui = ui.page_sidebar(
     ui.sidebar(
         ui.h3("MAA Sectional Meetings"),
         ui.p(
             {"style": "font-size: 0.85em;"},
-            ui.tags.a(
-                "Data source: maa.org/section-meetings",
-                href=SOURCE_URL,
-                target="_blank",
-                rel="noopener noreferrer",
+            ui.em(
+                "Unofficial extract; visit the ",
+                ui.tags.a(
+                    "MAA webpage",
+                    href=SOURCE_URL,
+                    target="_blank",
+                    rel="noopener noreferrer",
+                ),
+                " for details",
             ),
-            ui.tags.br(),
-            ui.em("Unofficial extract; there may be errors."),
             *(
                 [ui.tags.br(), _collected_line()]
                 if _collected_line()
@@ -203,7 +208,12 @@ app_ui = ui.page_sidebar(
             choices=_bucket_choices(),
             selected=["current", "upcoming", "mathfest"],
         ),
-        ui.input_text("search", "Filter by section or location", ""),
+        ui.input_select(
+            "section",
+            "Filter by section",
+            choices=_SECTION_CHOICES,
+            selected="All",
+        ),
         ui.input_radio_buttons(
             "sortby",
             "Sort table by",
@@ -230,6 +240,13 @@ app_ui = ui.page_sidebar(
                 target="_blank",
                 rel="noopener noreferrer",
             ),
+            ui.tags.br(),
+            ui.tags.a(
+                "Data source: maa.org/section-meetings",
+                href=SOURCE_URL,
+                target="_blank",
+                rel="noopener noreferrer",
+            ),
         ),
         width="280px",
     ),
@@ -247,18 +264,11 @@ app_ui = ui.page_sidebar(
 
 
 def server(input, output, session):
-    df = load_meetings()
-
     @reactive.calc
     def filtered() -> pd.DataFrame:
-        view = df[df["bucket"].isin(list(input.buckets()))]
-        query = input.search().strip().casefold()
-        if query:
-            mask = (
-                view["section"].str.casefold().str.contains(query, na=False)
-                | view["location"].str.casefold().str.contains(query, na=False)
-            )
-            view = view[mask]
+        view = _MEETINGS[_MEETINGS["bucket"].isin(list(input.buckets()))]
+        if input.section() != "All":
+            view = view[view["section"] == input.section()]
         return view
 
     @render.ui

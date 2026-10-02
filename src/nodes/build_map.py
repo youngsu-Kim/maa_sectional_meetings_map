@@ -145,13 +145,13 @@ def build_map_node(state: PipelineState) -> dict:
     )
     legend = (
         '<b>Meetings</b><br>'
-        '<span style="color:lightgray;">&#9679;</span> Past&nbsp;&nbsp;'
         f'<span style="color:orange;">&#9679;</span> '
         f'Current term ({current_term_label(today)})&nbsp;&nbsp;'
         '<span style="color:green;">&#9679;</span> Upcoming'
     )
     if has_national:
         legend += '&nbsp;&nbsp;<span style="color:darkpurple;">&#9679;</span> MathFest'
+    legend += '&nbsp;&nbsp;<span style="color:lightgray;">&#9679;</span> Past'
     m.get_root().html.add_child(
         folium.Element(f'<div style="{_LEGEND_STYLE}">{legend}</div>')
     )

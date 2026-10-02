@@ -1,0 +1,31 @@
+[project]
+name = "maa-sectional-meeting-map"
+version = "0.1.0"
+description = "LangGraph pipeline: scrape MAA section meetings, extract with an LLM, geocode, publish a Folium map"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2",
+    "langchain>=0.3",
+    "langchain-groq>=0.1",
+    "langchain-ollama>=0.2",
+    "pydantic>=2.7",
+    "curl_cffi>=0.7",
+    "beautifulsoup4>=4.12",
+    "geopy>=2.4",
+    "folium>=0.17",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["src", "src.nodes"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -10,8 +10,10 @@ structured event pages are parsed deterministically, no LLM needed.
 Sections listing multiple meetings (e.g. Fall 2026 and Spring 2027) get one pin
 per meeting, colored by time relative to the run date —
 **grey for past meetings, orange for the current term, green for upcoming
-terms** — and the view auto-fits the placed pins. The buckets are recomputed
-on every run, so the colors shift as terms pass.
+terms** (MathFest pins are **dark purple**) — and the view auto-fits the
+placed pins. The buckets are recomputed on every run, so the colors shift as
+terms pass. In the Shiny apps the Show-meetings filters offer Past / Current
+term / Upcoming / MathFest, and table locations link to Google Maps.
 
 ```
 scrape -> extract (fan-out) -> validate -> [retry] -> geocode -> build_map

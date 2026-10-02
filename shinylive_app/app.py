@@ -32,15 +32,17 @@ SOURCE_URL = "https://maa.org/section-meetings/"
 REPO_URL = "https://github.com/youngsu-Kim/maa-sectional-meeting-map"
 
 STATUS_COLORS = {
-    "past": "lightgray",   # light grey
-    "current": "orange",   # current term
-    "upcoming": "green",   # upcoming terms
+    "past": "lightgray",     # light grey
+    "current": "orange",     # current term
+    "upcoming": "green",     # upcoming terms
+    "mathfest": "darkpurple",  # national meetings (MathFest)
 }
 
 STATUS_LABELS = {
     "past": "Past",
     "current": "Current term",
     "upcoming": "Upcoming",
+    "mathfest": "MathFest",
 }
 
 # Speaker-program tags from the MAA page, color-coded in the table and popups.
@@ -91,7 +93,11 @@ def load_meetings() -> pd.DataFrame:
     df["latitude"] = df["latitude"].astype(float)
     df["longitude"] = df["longitude"].astype(float)
     # Buckets are relative to *now*, so the app stays current between runs.
-    df["bucket"] = df["date"].map(lambda d: meeting_status(str(d)))
+    # National meetings (row_id national-*) form their own MathFest category.
+    df["bucket"] = [
+        "mathfest" if str(row_id).startswith("national-") else meeting_status(str(d))
+        for row_id, d in zip(df["row_id"], df["date"])
+    ]
     return df
 
 
@@ -133,7 +139,8 @@ def build_map(view: pd.DataFrame) -> folium.Map:
         '<span style="color:lightgray;">&#9679;</span> Past&nbsp;&nbsp;'
         f'<span style="color:orange;">&#9679;</span> '
         f'Current term ({current_term_label()})&nbsp;&nbsp;'
-        '<span style="color:green;">&#9679;</span> Upcoming'
+        '<span style="color:green;">&#9679;</span> Upcoming&nbsp;&nbsp;'
+        '<span style="color:darkpurple;">&#9679;</span> MathFest'
     )
     m.get_root().html.add_child(
         folium.Element(f'<div style="{_LEGEND_STYLE}">{legend}</div>')
@@ -179,7 +186,7 @@ app_ui = ui.page_sidebar(
             "buckets",
             "Show meetings",
             choices=_bucket_choices(),
-            selected=["current", "upcoming"],
+            selected=["current", "upcoming", "mathfest"],
         ),
         ui.input_text("search", "Filter by section or location", ""),
         ui.input_radio_buttons(
@@ -279,11 +286,24 @@ def server(input, output, session):
                 ui.tags.div(name, style=f"color: {color};") if color else ui.tags.div(name)
                 for name, color in _speaker_lines(_text(row["speakers"]))
             ]
+            location_text = _text(row["location"])
+            if location_text and row["latitude"] and row["longitude"]:
+                location_cell = ui.tags.a(
+                    location_text,
+                    href=(
+                        "https://www.google.com/maps/search/"
+                        f"?api=1&query={row['latitude']},{row['longitude']}"
+                    ),
+                    target="_blank",
+                    rel="noopener noreferrer",
+                )
+            else:
+                location_cell = location_text
             body.append(
                 ui.tags.tr(
                     ui.tags.td(section_cell),
                     ui.tags.td(normalize_date(_text(row["date"]))),
-                    ui.tags.td(_text(row["location"])),
+                    ui.tags.td(location_cell),
                     ui.tags.td(*speakers_cell),
                     ui.tags.td(
                         ui.tags.span(

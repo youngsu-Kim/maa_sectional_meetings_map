@@ -187,3 +187,30 @@ def test_legend_present(tmp_path):
 def test_links_to_shinylive_app(tmp_path):
     html, _ = _run(tmp_path, [dict(FALL_RECORD)])
     assert 'href="shinylive/"' in html
+
+
+MATHFEST_RECORD = {
+    "row_id": "national-0",
+    "meeting_index": 0,
+    "section": "MAA MathFest",
+    "date": "August 4-7, 2027",
+    "location": "New Orleans, LA",
+    "speakers": "",
+    "section_url": "https://maa.org/event/mathfest/",
+    "latitude": 29.9561422,
+    "longitude": -90.0733934,
+    "status": "ok",
+    "note": "",
+}
+
+
+def test_national_rows_get_own_color_and_legend(tmp_path):
+    html, _ = _run(tmp_path, [dict(MATHFEST_RECORD), dict(FALL_RECORD)])
+    # MathFest pins are darkpurple even though the date is 'upcoming'
+    assert "darkpurple" in html
+    assert "MathFest" in html  # legend entry
+
+
+def test_no_mathfest_legend_without_national_rows(tmp_path):
+    html, _ = _run(tmp_path, [dict(FALL_RECORD)])
+    assert "MathFest" not in html

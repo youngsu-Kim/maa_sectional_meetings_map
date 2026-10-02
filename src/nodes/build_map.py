@@ -20,6 +20,7 @@ ZOOM_START = 5  # tight on the continental US; no Canada/Mexico padding
 
 TERM_COLORS = {"fall": "orange", "spring": "green"}
 STATUS_COLORS = {"past": "lightgray", "current": "orange", "upcoming": "green"}
+NATIONAL_COLOR = "darkpurple"  # national meetings (MathFest) get their own pin color
 
 _NOTE_STYLE = (
     "position: fixed; bottom: 20px; left: 20px; z-index: 9999; "
@@ -72,7 +73,10 @@ def build_map_node(state: PipelineState) -> dict:
     placed, unplaced = [], []
     for row in rows:
         if row.get("status") == "ok" and row.get("latitude") is not None:
-            color = STATUS_COLORS[statuses[id(row)]]
+            if str(row.get("row_id", "")).startswith("national-"):
+                color = NATIONAL_COLOR
+            else:
+                color = STATUS_COLORS[statuses[id(row)]]
             folium.Marker(
                 [row["latitude"], row["longitude"]],
                 popup=folium.Popup(_popup(row), max_width=300),
@@ -111,6 +115,9 @@ def build_map_node(state: PipelineState) -> dict:
             )
         )
 
+    has_national = any(
+        str(r.get("row_id", "")).startswith("national-") for r in rows
+    )
     legend = (
         '<b>Meetings</b><br>'
         '<span style="color:lightgray;">&#9679;</span> Past&nbsp;&nbsp;'
@@ -118,6 +125,8 @@ def build_map_node(state: PipelineState) -> dict:
         f'Current term ({current_term_label(today)})&nbsp;&nbsp;'
         '<span style="color:green;">&#9679;</span> Upcoming'
     )
+    if has_national:
+        legend += '&nbsp;&nbsp;<span style="color:darkpurple;">&#9679;</span> MathFest'
     m.get_root().html.add_child(
         folium.Element(f'<div style="{_LEGEND_STYLE}">{legend}</div>')
     )

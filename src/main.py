@@ -85,7 +85,8 @@ def main(argv=None) -> int:
         print(f"archive:           {snapshot}")
 
     _print_summary(final_state, tracker)
-    return 0
+    # Nonzero on failed rows: a bad extraction should not silently deploy.
+    return 1 if final_state.get("failed_rows") else 0
 
 
 def save_dated_snapshot(csv_path, archive_dir, today: date) -> Path:

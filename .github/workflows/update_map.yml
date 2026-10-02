@@ -15,8 +15,11 @@ permissions:
   id-token: write
 
 jobs:
-  update:
+  update-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,15 +56,9 @@ jobs:
             git push
           fi
 
-  deploy:
-    needs: update
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-
+      # Deploy in this same job: site/index.html and site/shinylive/ are
+      # generated here and never committed, so a fresh-checkout job would
+      # only find an empty site/.
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3

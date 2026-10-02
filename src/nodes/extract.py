@@ -40,8 +40,14 @@ def build_prompt(raw: RawSection, feedback: list[str] | None = None) -> str:
 
 @lru_cache(maxsize=1)
 def _default_structured_llm():
-    method = os.environ.get("LLM_STRUCTURED_METHOD", "json_schema")
     llm = make_llm()
+    # Groq's json_schema response format mangles nested model lists (returns
+    # empty 'meetings'); its tool-calling path is mature, so use that there.
+    # Ollama's constrained decoding handles json_schema natively.
+    provider = (os.environ.get("LLM_MODEL") or DEFAULT_MODEL).partition(":")[0]
+    method = os.environ.get("LLM_STRUCTURED_METHOD") or (
+        "function_calling" if provider == "groq" else "json_schema"
+    )
     structured = llm.with_structured_output(SectionMeetings, method=method)
     return structured.with_retry(stop_after_attempt=4, wait_exponential_jitter=True)
 

@@ -68,6 +68,14 @@ def current_term_label(today: date | None = None) -> str:
     return f"Fall {today.year}"
 
 
+def meeting_sort_key(date_str: str) -> tuple[int, int]:
+    """Chronological sort key (year, month); unparseable dates sort last."""
+    parsed = _parse_month_year(date_str)
+    if parsed is None:
+        return (9999, 12)
+    return parsed
+
+
 def meeting_status(date_str: str, today: date | None = None) -> str:
     """Bucket a meeting as 'past', 'current', or 'upcoming' relative to today.
 

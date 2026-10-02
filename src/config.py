@@ -12,6 +12,7 @@ GEOCODE_CACHE_PATH = DATA_DIR / "geocode_cache.csv"
 LOCATION_CORRECTIONS_PATH = DATA_DIR / "location_corrections.csv"
 SECTION_REGIONS_PATH = DATA_DIR / "section_regions.csv"
 MEETINGS_CSV_PATH = DATA_DIR / "meetings_latest.csv"
+ARCHIVE_DIR = DATA_DIR / "archive"
 LAST_RUN_PATH = DATA_DIR / "last_run.txt"
 MAP_PATH = SITE_DIR / "index.html"
 

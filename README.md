@@ -51,7 +51,13 @@ python -m src.main --dry-run      # fully offline: fixture HTML + fake LLM
 python -m src.main --fixture tests/fixtures/section_meetings.html  # scrape from file, rest live
 ```
 
-Outputs: `site/index.html` (the map) and `data/meetings_latest.csv`.
+Outputs: `site/index.html` (the map) and `data/meetings_latest.csv` — the
+canonical current data that the apps and the Shinylive export read. Every
+real run also archives a dated copy under `data/archive/meetings_YYYY-MM-DD.csv`
+(same-day re-runs overwrite that day's snapshot), so the history of what the
+MAA page said is browsable and diffable; `git log` on the archive shows when
+things changed. `--dry-run` writes to a `dry_run/` scratch directory and never
+touches the real data.
 Geocoding is region-aware: `data/section_regions.csv` maps each MAA section
 to the country codes (and optionally a bounding box) of its territory, so
 ambiguous venue names resolve inside the section's region — e.g. "St. Thomas

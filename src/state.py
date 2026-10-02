@@ -33,6 +33,7 @@ class PipelineState(TypedDict, total=False):
     limit: int
     cache_path: str
     corrections_path: str
+    today: str  # ISO date overriding date.today() (tests / deterministic builds)
     map_path_out: str
     csv_path_out: str
 

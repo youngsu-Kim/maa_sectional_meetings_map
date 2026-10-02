@@ -1,6 +1,7 @@
 import csv
 import html
 import re
+from datetime import date
 from pathlib import Path
 
 import folium
@@ -11,8 +12,6 @@ from src.state import PipelineState
 MAP_CENTER = (39.5, -98.35)
 ZOOM_START = 5  # tight on the continental US; no Canada/Mexico padding
 
-_FALL_MONTHS = {"sep", "oct", "nov", "dec"}
-_SPRING_MONTHS = {"jan", "feb", "mar", "apr", "may", "jun"}
 # Full or abbreviated month names ("Feb.", "Oct", "September", ...).
 _MONTHS_RE = re.compile(
     r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|"
@@ -21,9 +20,13 @@ _MONTHS_RE = re.compile(
     re.IGNORECASE,
 )
 _YEAR_RE = re.compile(r"(20\d{2})")
+_MONTH_NUMBERS = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
 
 TERM_COLORS = {"fall": "orange", "spring": "green"}
-DEFAULT_COLOR = "blue"
+STATUS_COLORS = {"past": "lightgray", "current": "orange", "upcoming": "green"}
 
 _NOTE_STYLE = (
     "position: fixed; bottom: 20px; left: 20px; z-index: 9999; "
@@ -41,9 +44,9 @@ _LEGEND_STYLE = (
 def term_of(date: str) -> str:
     """Classify a meeting date as 'fall' or 'spring' (empty if undeterminable)."""
     months = {m[:3].casefold() for m in _MONTHS_RE.findall(date)}
-    if months & _FALL_MONTHS:
+    if months & {"sep", "oct", "nov", "dec"}:
         return "fall"
-    if months & _SPRING_MONTHS:
+    if months & {"jan", "feb", "mar", "apr", "may", "jun"}:
         return "spring"
     text = date.casefold()
     if "fall" in text:
@@ -60,6 +63,53 @@ def term_label(date: str) -> str:
         return date
     year = _YEAR_RE.search(date)
     return f"{term.capitalize()} {year.group(1)}" if year else term.capitalize()
+
+
+def _parse_month_year(date_str: str):
+    months = _MONTHS_RE.findall(date_str)
+    year = _YEAR_RE.search(date_str)
+    if not months or not year:
+        return None
+    return int(year.group(1)), _MONTH_NUMBERS[months[0][:3].casefold()]
+
+
+def _term_key(year: int, month: int) -> tuple[int, int]:
+    """Academic-year ordering: Fall 2026 < Spring 2027 < Fall 2027 < ..."""
+    if month <= 6:
+        return (year - 1, 1)  # spring belongs to the academic year that started prior fall
+    return (year, 0)  # fall (July-Aug meetings count toward the upcoming fall term)
+
+
+def current_term_label(today: date | None = None) -> str:
+    today = today or date.today()
+    if today.month <= 6:
+        return f"Spring {today.year}"
+    return f"Fall {today.year}"
+
+
+def meeting_status(date_str: str, today: date | None = None) -> str:
+    """Bucket a meeting as 'past', 'current', or 'upcoming' relative to today.
+
+    Term-granular: a meeting stays 'current' for the whole academic term it
+    belongs to (Fall = Jul-Dec, Spring = Jan-Jun) once that term arrives, so
+    the buckets shift automatically as time passes.
+    """
+    today = today or date.today()
+    parsed = _parse_month_year(date_str)
+    if parsed is None:
+        return "current"  # unparseable dates stay visible under the current bucket
+    year, month = parsed
+
+    if (year, month) < (today.year, today.month):
+        return "past"
+
+    meeting_key = _term_key(year, month)
+    today_key = _term_key(today.year, today.month)
+    if meeting_key < today_key:
+        return "past"
+    if meeting_key == today_key:
+        return "current"
+    return "upcoming"
 
 
 def _popup(row) -> str:
@@ -84,12 +134,18 @@ def build_map_node(state: PipelineState) -> dict:
     map_path = Path(state.get("map_path_out") or MAP_PATH)
     csv_path = Path(state.get("csv_path_out") or MEETINGS_CSV_PATH)
 
+    today = state.get("today")
+    if isinstance(today, str):
+        today = date.fromisoformat(today)
+    # classify once per meeting; buckets shift automatically as time passes
+    statuses = {id(r): meeting_status(str(r["date"]), today) for r in rows}
+
     m = folium.Map(location=list(MAP_CENTER), zoom_start=ZOOM_START, tiles="OpenStreetMap")
 
     placed, unplaced = [], []
     for row in rows:
         if row.get("status") == "ok" and row.get("latitude") is not None:
-            color = TERM_COLORS.get(term_of(str(row["date"])), DEFAULT_COLOR)
+            color = STATUS_COLORS[statuses[id(row)]]
             folium.Marker(
                 [row["latitude"], row["longitude"]],
                 popup=folium.Popup(_popup(row), max_width=300),
@@ -128,26 +184,30 @@ def build_map_node(state: PipelineState) -> dict:
             )
         )
 
-    legend_items = "".join(
-        f'<span style="color:{color};">&#9679;</span> {term.capitalize()} meeting&nbsp;&nbsp;'
-        for term, color in TERM_COLORS.items()
+    legend = (
+        '<b>Meetings</b><br>'
+        '<span style="color:lightgray;">&#9679;</span> Past&nbsp;&nbsp;'
+        f'<span style="color:orange;">&#9679;</span> '
+        f'Current term ({current_term_label(today)})&nbsp;&nbsp;'
+        '<span style="color:green;">&#9679;</span> Upcoming'
     )
     m.get_root().html.add_child(
-        folium.Element(f'<div style="{_LEGEND_STYLE}"><b>Meetings</b><br>{legend_items}</div>')
+        folium.Element(f'<div style="{_LEGEND_STYLE}">{legend}</div>')
     )
 
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(
-            ["row_id", "meeting_index", "term", "section", "date", "location",
-             "speakers", "section_url", "latitude", "longitude", "status", "note"]
+            ["row_id", "meeting_index", "term", "meeting_status", "section",
+             "date", "location", "speakers", "section_url", "latitude",
+             "longitude", "status", "note"]
         )
         for row in rows:
             writer.writerow(
                 [row["row_id"], row.get("meeting_index", 0),
-                 term_of(str(row["date"])), row["section"], row["date"],
-                 row["location"], row["speakers"], row["section_url"],
+                 term_of(str(row["date"])), statuses[id(row)], row["section"],
+                 row["date"], row["location"], row["speakers"], row["section_url"],
                  row["latitude"], row["longitude"], row["status"],
                  row.get("note", "")]
             )

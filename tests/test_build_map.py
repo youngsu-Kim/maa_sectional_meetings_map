@@ -1,6 +1,29 @@
 import csv
+from datetime import date
 
-from src.nodes.build_map import build_map_node, term_label, term_of
+from src.nodes.build_map import (
+    build_map_node,
+    current_term_label,
+    meeting_status,
+    term_label,
+    term_of,
+)
+
+TODAY = date(2026, 10, 2)  # pinned: inside the Fall 2026 term
+
+PAST_RECORD = {
+    "row_id": "row-5",
+    "meeting_index": 0,
+    "section": "INDIANA",
+    "date": "March 27-28, 2026",
+    "location": "Taylor University, IN",
+    "speakers": "Jane Doe",
+    "section_url": "https://www.indiana.maa.org/",
+    "latitude": 40.4560812,
+    "longitude": -85.5011884,
+    "status": "ok",
+    "note": "",
+}
 
 FALL_RECORD = {
     "row_id": "row-7",
@@ -35,6 +58,7 @@ def _run(tmp_path, rows):
     build_map_node(
         {
             "geocoded": rows,
+            "today": TODAY.isoformat(),
             "map_path_out": str(tmp_path / "index.html"),
             "csv_path_out": str(tmp_path / "meetings.csv"),
         }
@@ -61,15 +85,44 @@ def test_term_classification():
     assert term_label("Dec. 4, 2026") == "Fall 2026"
 
 
-def test_fall_and_spring_pins_get_different_colors(tmp_path):
-    html, csv_rows = _run(tmp_path, [dict(FALL_RECORD), dict(SPRING_RECORD)])
+def test_meeting_status_buckets():
+    assert meeting_status("March 27-28, 2026", TODAY) == "past"
+    assert meeting_status("November 13-14, 2026", TODAY) == "current"
+    assert meeting_status("Dec. 4, 2026", TODAY) == "current"
+    assert meeting_status("October 30–31, 2026", TODAY) == "current"
+    assert meeting_status("April 3, 2027", TODAY) == "upcoming"
+    assert meeting_status("Feb 27, 2027", TODAY) == "upcoming"
+    assert meeting_status("unparseable", TODAY) == "current"
+    # buckets shift with time...
+    jan_2027 = date(2027, 1, 15)
+    assert meeting_status("November 13-14, 2026", jan_2027) == "past"
+    assert meeting_status("April 3, 2027", jan_2027) == "current"
+    assert meeting_status("Oct 2, 2027", jan_2027) == "upcoming"
+    # summer counts toward the upcoming fall term
+    jul_2027 = date(2027, 7, 10)
+    assert meeting_status("Sept 10, 2027", jul_2027) == "current"
+    assert meeting_status("April 3, 2027", jul_2027) == "past"
+
+
+def test_current_term_label():
+    assert current_term_label(TODAY) == "Fall 2026"
+    assert current_term_label(date(2027, 3, 1)) == "Spring 2027"
+    assert current_term_label(date(2027, 7, 1)) == "Fall 2027"
+
+
+def test_past_current_upcoming_pins_get_distinct_colors(tmp_path):
+    html, csv_rows = _run(
+        tmp_path, [dict(PAST_RECORD), dict(FALL_RECORD), dict(SPRING_RECORD)]
+    )
     # each color appears in the marker icon AND the legend
-    assert html.count("orange") >= 2  # fall pin
-    assert html.count("green") >= 2  # spring pin
-    assert "Fall 2026" in html and "Spring 2027" in html  # popup labels
-    # CSV: one row per meeting with its term
-    assert [r["term"] for r in csv_rows] == ["fall", "spring"]
-    assert [r["meeting_index"] for r in csv_rows] == ["0", "1"]
+    assert html.count("lightgray") >= 2  # past pin
+    assert html.count("orange") >= 2  # current-term pin
+    assert html.count("green") >= 2  # upcoming pin
+    # popup term labels still rendered
+    assert "Fall 2026" in html and "Spring 2027" in html
+    # CSV: one row per meeting with term and temporal bucket
+    assert [r["term"] for r in csv_rows] == ["spring", "fall", "spring"]
+    assert [r["meeting_status"] for r in csv_rows] == ["past", "current", "upcoming"]
 
 
 def test_map_fits_to_markers_not_default_view(tmp_path):
@@ -108,5 +161,6 @@ def test_invalid_row_listed_in_side_note(tmp_path):
 
 def test_legend_present(tmp_path):
     html, _ = _run(tmp_path, [dict(FALL_RECORD)])
-    assert "Fall meeting" in html
-    assert "Spring meeting" in html
+    assert "Past" in html
+    assert "Current term (Fall 2026)" in html
+    assert "Upcoming" in html

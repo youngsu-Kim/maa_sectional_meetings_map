@@ -5,8 +5,10 @@ A [LangGraph](https://langchain-ai.github.io/langgraph/) pipeline that scrapes t
 meeting data with an LLM, geocodes the venues, and publishes an interactive
 [Folium](https://python-visualization.github.io/folium/) map to GitHub Pages.
 Sections listing multiple meetings (e.g. Fall 2026 and Spring 2027) get one pin
-per meeting — orange for fall, green for spring — and the view auto-fits the
-placed pins.
+per meeting, colored by time relative to the run date —
+**grey for past meetings, orange for the current term, green for upcoming
+terms** — and the view auto-fits the placed pins. The buckets are recomputed
+on every run, so the colors shift as terms pass.
 
 ```
 scrape -> extract (fan-out) -> validate -> [retry] -> geocode -> build_map
@@ -57,6 +59,29 @@ the original text and an explanatory note are kept on the map and in the CSV.
 pytest                       # offline unit tests (no network, no LLM)
 LLM_MODEL=... pytest tests/test_golden_llm.py   # live-LLM comparison vs golden CSV
 ```
+
+## Interactive Shiny front end
+
+An alternative to the static map: a Python [Shiny](https://shiny.posit.co/py/)
+app reading `data/meetings_latest.csv` with live filters (show/hide past,
+current, upcoming; free-text search over sections and locations), a synced
+data table, and a Folium map in an iframe. Buckets are recomputed at app
+start, so the colors stay current between pipeline runs.
+
+```bash
+uv pip install -e ".[shiny]"   # or: pip install -e ".[shiny]"
+shiny run app.py --reload      # http://localhost:8000
+```
+
+Other platforms worth a look for this kind of dashboard:
+[Streamlit](https://streamlit.io/) (fastest prototypes; free hosting on
+Streamlit Community Cloud or HF Spaces), [Dash](https://dash.plotly.com/)
+(callback-based, enterprise-flavored), [Panel](https://panel.holoviz.org/)
+(notebook-first), R [Shiny](https://shiny.posit.co/) (the original; the
+`leaflet` R package is excellent), and static options like
+[Quarto](https://quarto.org/) or [Observable](https://observablehq.com/) that
+deploy free on GitHub Pages like the current map. Anything server-based
+(Shiny/Streamlit/Dash) needs a host; the static Folium HTML does not.
 
 ## GitHub Actions
 

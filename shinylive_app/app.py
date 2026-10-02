@@ -1,13 +1,14 @@
-"""Interactive Shiny front end for the MAA sectional meeting map.
+"""Browser-only version of the MAA sectional meeting map (Shinylive/Pyodide).
 
-Reads the CSV produced by the LangGraph pipeline (data/meetings_latest.csv)
-and renders a Folium map plus a data table with live filters. Temporal
-buckets (past / current term / upcoming) are recomputed at app start, so the
-colors shift as time passes without re-running the pipeline.
+Runs entirely in the visitor's browser via Pyodide - no server, deployable
+on GitHub Pages. The data is a snapshot from the last pipeline run
+(shinylive_app/data/meetings_latest.csv). meeting_time.py is a synced copy
+of the repo-root meeting_time.py (a test enforces the sync).
 
-Run from the repo root:
+Regenerate the static export with:
 
-    shiny run app.py --reload
+    .venv/bin/python -c "from shinylive._export import export; \\
+        export('shinylive_app', 'site/shinylive')"
 """
 
 from pathlib import Path
@@ -81,7 +82,7 @@ app_ui = ui.page_sidebar(
         ui.h3("MAA Sectional Meetings"),
         ui.p(
             "One pin per meeting. Buckets are relative to today, so colors ",
-            "shift as terms pass.",
+            "shift as terms pass. This app runs entirely in your browser.",
         ),
         ui.input_checkbox_group(
             "buckets",

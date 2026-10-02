@@ -60,18 +60,34 @@ pytest                       # offline unit tests (no network, no LLM)
 LLM_MODEL=... pytest tests/test_golden_llm.py   # live-LLM comparison vs golden CSV
 ```
 
-## Interactive Shiny front end
+## Interactive Shiny front ends
 
-An alternative to the static map: a Python [Shiny](https://shiny.posit.co/py/)
-app reading `data/meetings_latest.csv` with live filters (show/hide past,
-current, upcoming; free-text search over sections and locations), a synced
-data table, and a Folium map in an iframe. Buckets are recomputed at app
-start, so the colors stay current between pipeline runs.
+Two variants read `data/meetings_latest.csv` and recompute the past/current/
+upcoming buckets at startup, so colors stay current between pipeline runs.
+
+**Server version** (Python [Shiny](https://shiny.posit.co/py/)):
 
 ```bash
 uv pip install -e ".[shiny]"   # or: pip install -e ".[shiny]"
 shiny run app.py --reload      # http://localhost:8000
 ```
+
+**Browser-only version** ([Shinylive](https://shiny.posit.co/py/shinylive/)):
+the same app compiled to WebAssembly via Pyodide — no server, deployable
+statically. First load downloads the Python runtime (~40 MB, cached by a
+service worker afterwards), then the app runs entirely in the visitor's
+browser:
+
+```bash
+uv pip install -e ".[shinylive]"
+python -c "from shinylive._export import export; export('shinylive_app', 'site/shinylive')"
+python3 -m http.server --directory site  # open /shinylive/
+```
+
+The GitHub Actions workflow builds this export on every run, so GitHub Pages
+serves the static Folium map at `/` and the Shinylive app at `/shinylive/`.
+`shinylive_app/meeting_time.py` is a synced copy of the repo-root
+`meeting_time.py` (a test enforces the sync).
 
 Other platforms worth a look for this kind of dashboard:
 [Streamlit](https://streamlit.io/) (fastest prototypes; free hosting on
@@ -80,8 +96,7 @@ Streamlit Community Cloud or HF Spaces), [Dash](https://dash.plotly.com/)
 (notebook-first), R [Shiny](https://shiny.posit.co/) (the original; the
 `leaflet` R package is excellent), and static options like
 [Quarto](https://quarto.org/) or [Observable](https://observablehq.com/) that
-deploy free on GitHub Pages like the current map. Anything server-based
-(Shiny/Streamlit/Dash) needs a host; the static Folium HTML does not.
+deploy free on GitHub Pages like the current map.
 
 ## GitHub Actions
 

@@ -26,7 +26,7 @@ jobs:
           cache: pip
 
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,shinylive]"
 
       - name: Run pipeline
         env:
@@ -36,6 +36,12 @@ jobs:
 
       - name: Run offline tests
         run: pytest
+
+      - name: Build Shinylive export
+        run: |
+          cp data/meetings_latest.csv shinylive_app/data/meetings_latest.csv
+          cp meeting_time.py shinylive_app/meeting_time.py
+          python -c "from shinylive._export import export; export('shinylive_app', 'site/shinylive')"
 
       - name: Commit refreshed data
         run: |

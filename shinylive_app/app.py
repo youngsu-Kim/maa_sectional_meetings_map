@@ -182,24 +182,30 @@ def server(input, output, session):
         head = ui.tags.thead(
             ui.tags.tr(
                 *[ui.tags.th(h) for h in
-                  ("Section", "Date", "Location", "Speakers", "When", "Website")]
+                  ("Section", "Date", "Location", "Speakers", "When")]
             )
         )
         body = []
         for _, row in view.iterrows():
+            section = _text(row["section"])
+            url = _text(row["section_url"])
+            section_cell = (
+                ui.tags.a(section, href=url, target="_blank", rel="noopener noreferrer")
+                if url.startswith("http")
+                else section
+            )
+            bucket = _text(row["bucket"])
             body.append(
                 ui.tags.tr(
-                    ui.tags.td(_text(row["section"])),
+                    ui.tags.td(section_cell),
                     ui.tags.td(_text(row["date"])),
                     ui.tags.td(_text(row["location"])),
                     ui.tags.td(_text(row["speakers"])),
-                    ui.tags.td(_text(row["bucket"])),
                     ui.tags.td(
-                        ui.tags.a(
-                            "link",
-                            href=_text(row["section_url"]),
-                            target="_blank",
-                            rel="noopener noreferrer",
+                        ui.tags.span(
+                            "\u25cf",
+                            style=f"color: {STATUS_COLORS.get(bucket, 'black')};",
+                            title=bucket,
                         )
                     ),
                 )

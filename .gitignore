@@ -8,5 +8,7 @@ __pycache__/
 *.egg-info/
 site/index.html
 site/shinylive/
+site/shinylive-r/
+.playwright-mcp/
 dry_run/
 opencode_session.md

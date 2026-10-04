@@ -156,13 +156,14 @@ text and the reason, so readers can verify the fix themselves.
 ## Tests
 
 ```bash
-pytest                       # offline unit tests (no network, no LLM)
+pytest                               # offline unit tests (no network, no LLM)
+Rscript shinylive_r_app/selftest.R   # R logic parity checks (base R only)
 LLM_MODEL=... pytest tests/test_golden_llm.py   # live-LLM comparison vs golden CSV
 ```
 
 ## Interactive Shiny front ends
 
-Two variants read `data/meetings_latest.csv` and recompute the past/current/
+Three variants read `data/meetings_latest.csv` and recompute the past/current/
 upcoming buckets at startup, so colors stay current between pipeline runs.
 The map and table panes are separated by a draggable divider (like the
 sidebar's edge) so either can be enlarged, and a basemap switcher
@@ -188,8 +189,9 @@ python -c "from shinylive._export import export; export('shinylive_app', 'site/s
 python3 -m http.server --directory site  # open /shinylive/
 ```
 
-The GitHub Actions workflow builds this export on every run, so GitHub Pages
-serves the static Folium map at `/` and the Shinylive app at `/shinylive/`.
+The GitHub Actions workflow builds both exports on every run, so GitHub Pages
+serves the static Folium map at `/`, the Python Shinylive app at `/shinylive/`,
+and the R Shinylive app at `/shinylive-r/`.
 `shinylive_app/meeting_time.py` is a synced copy of the repo-root
 `meeting_time.py` (a test enforces the sync); `app.py` and
 `shinylive_app/app.py` are kept in step manually.
@@ -197,14 +199,34 @@ The region divider headers come from `data/section_groups.csv` (a
 test checks it against the data, so a new or renamed MAA section fails CI
 until the CSV catches up); unlisted sections fall back to an "Other" group.
 
+**R version** ([Shiny for R](https://shiny.posit.co/) via
+[webR](https://docs.r-wasm.org/webr/latest/)): `shinylive_r_app/` is a
+feature-parity port of the same app — same sidebar, filters, fade ramps,
+table, draggable divider, and basemap switcher — with R itself running in
+the browser via WebAssembly. First load downloads the webR runtime (larger
+than Pyodide; roughly a minute on a typical connection, cached afterwards):
+
+```bash
+Rscript -e 'shiny::runApp("shinylive_r_app", port = 8130)'  # native run
+Rscript shinylive_r_app/selftest.R                          # logic parity checks
+Rscript -e 'shinylive::export("shinylive_r_app", "site/shinylive-r")'
+```
+
+`shinylive_r_app/meeting_time.R` is the single canonical copy of the shared
+logic on the R side (sourced by both `app.R` and `selftest.R`); keep it in
+step with `meeting_time.py` when the logic changes. Mind the mirrored
+choice-list conventions: R renders `c(<label> = <value>)` where Python
+Shiny uses `{<value>: <label>}`.
+
 Other platforms worth a look for this kind of dashboard:
 [Streamlit](https://streamlit.io/) (fastest prototypes; free hosting on
 Streamlit Community Cloud or HF Spaces), [Dash](https://dash.plotly.com/)
 (callback-based, enterprise-flavored), [Panel](https://panel.holoviz.org/)
-(notebook-first), R [Shiny](https://shiny.posit.co/) (the original; the
-`leaflet` R package is excellent), and static options like
+(notebook-first), and static options like
 [Quarto](https://quarto.org/) or [Observable](https://observablehq.com/) that
-deploy free on GitHub Pages like the current map.
+deploy free on GitHub Pages like the current map. R Shiny no longer belongs
+on that list — it is the `/shinylive-r/` twin above, and the
+[leaflet](https://rstudio.github.io/leaflet/) R package is excellent.
 
 ## GitHub Actions
 

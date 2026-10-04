@@ -1,7 +1,13 @@
 import csv
 from datetime import date
 
-from meeting_time import fade_alphas, normalize_date
+from meeting_time import (
+    NATIONAL_RAMP,
+    PAST_ALPHA,
+    UPCOMING_RAMP,
+    fade_alphas,
+    normalize_date,
+)
 from src.nodes.build_map import (
     build_map_node,
     current_term_label,
@@ -225,19 +231,44 @@ def test_no_mathfest_legend_without_national_rows(tmp_path):
 
 def test_fade_alphas_soonest_full_then_lighter():
     alphas = fade_alphas(["April 3, 2027", "February 10, 2027", "March 1, 2027"])
-    # input order preserved: Feb is soonest -> 1.0; Mar -> 0.85; Apr -> 0.7
-    assert alphas == [0.7, 1.0, 0.85]
+    # input order preserved: Feb is soonest -> 1.0; Mar -> 0.85; Apr -> 0.75
+    assert alphas == [0.75, 1.0, 0.85]
 
 
-def test_fade_alphas_ties_share_alpha_and_floor():
-    # same month ties share rank; long tails stop at the floor
+def test_fade_alphas_national_ramp_is_steeper_than_upcoming():
+    alphas = fade_alphas(
+        ["August 8-11, 2029", "August 4-7, 2027", "August 7-10, 2030",
+         "August 2-5, 2028"],
+        NATIONAL_RAMP,
+    )
+    # soonest MathFest solid, then the requested 0.70 / 0.55 / 0.45 tail
+    assert alphas == [0.55, 1.0, 0.45, 0.70]
+    # past pins stay strictly below every future pin, so they never blend in
+    assert min(UPCOMING_RAMP) > PAST_ALPHA
+    assert min(NATIONAL_RAMP) > PAST_ALPHA
+
+
+def test_fade_alphas_ties_share_alpha_and_ramp_tail():
+    # same month ties share rank; ranks past the ramp end keep the last value
     dates = ["January 5, 2027", "January 20, 2027", "February 1, 2027",
              "March 1, 2027", "April 1, 2027", "May 1, 2027", "June 1, 2027",
              "July 1, 2027", "August 1, 2027"]
     alphas = fade_alphas(dates)
     assert alphas[0] == alphas[1] == 1.0
     assert alphas[2] == 0.85
-    assert min(alphas) == 0.3
+    assert min(alphas) == 0.65
+
+
+def test_past_pins_use_constant_opacity(tmp_path):
+    past = [
+        dict(SPRING_RECORD, row_id="row-p1", meeting_index=0,
+             section="OLD A", date="April 3, 2026"),
+        dict(SPRING_RECORD, row_id="row-p2", meeting_index=0,
+             section="OLD B", date="May 3, 2026"),
+    ]
+    html, _ = _run(tmp_path, past)
+    # every past pin shares the constant dimmed opacity, regardless of rank
+    assert html.count('"opacity": 0.4') >= 2
 
 
 def test_upcoming_and_national_pins_fade_by_date(tmp_path):
@@ -257,7 +288,7 @@ def test_upcoming_and_national_pins_fade_by_date(tmp_path):
         [dict(FALL_RECORD)] + upcoming_records + mathfest_records,
     )
     # current-term pin (Nov 2026) stays opaque; fades apply per future group
+    assert '"opacity": 0.85' in html or "opacity&#39;: 0.85" in html or "0.85" in html
     assert '"opacity": 0.7' in html or "opacity&#39;: 0.7" in html or "0.7" in html
-    assert '"opacity": 0.85' in html or "0.85" in html
-    # MathFest sequence: 1.0 / 0.85 / 0.7 (soonest unmarked = fully opaque)
-    assert html.count("0.85") >= 2  # one upcoming, one MathFest
+    # MathFest sequence: 1.0 / 0.7 / 0.55 (soonest unmarked = fully opaque)
+    assert "0.55" in html  # third MathFest

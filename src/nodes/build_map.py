@@ -6,6 +6,9 @@ from pathlib import Path
 import folium
 
 from meeting_time import (
+    NATIONAL_RAMP,
+    PAST_ALPHA,
+    UPCOMING_RAMP,
     current_term_label,
     fade_alphas,
     meeting_status,
@@ -71,24 +74,46 @@ def build_map_node(state: PipelineState) -> dict:
 
     # Future pins fade with temporal distance: the soonest upcoming (and the
     # soonest national) meeting stays fully opaque, later ones get lighter.
-    def _fade_group(group: list[dict]) -> dict[int, float]:
-        alphas = fade_alphas([str(r["date"]) for r in group])
+    # Upcoming fades gently (never as faint as past); MathFest fades steeper.
+    # Past pins use a constant dimmed opacity.
+    def _fade_group(group: list[dict], ramp: tuple[float, ...]) -> dict[int, float]:
+        alphas = fade_alphas([str(r["date"]) for r in group], ramp)
         return {id(r): a for r, a in zip(group, alphas)}
 
-    upcoming_rows = [
-        r for r in rows
-        if r.get("status") == "ok" and r.get("latitude") is not None
-        and statuses[id(r)] == "upcoming"
-        and not str(r.get("row_id", "")).startswith("national-")
-    ]
+    def _placable(r: dict) -> bool:
+        return (
+            r.get("status") == "ok"
+            and r.get("latitude") is not None
+            and not str(r.get("row_id", "")).startswith("national-")
+        )
+
+    upcoming_rows = [r for r in rows if _placable(r) and statuses[id(r)] == "upcoming"]
+    past_rows = [r for r in rows if _placable(r) and statuses[id(r)] == "past"]
     national_rows = [
         r for r in rows
         if r.get("status") == "ok" and r.get("latitude") is not None
         and str(r.get("row_id", "")).startswith("national-")
     ]
-    alphas = {**_fade_group(upcoming_rows), **_fade_group(national_rows)}
+    alphas = {
+        **_fade_group(upcoming_rows, UPCOMING_RAMP),
+        **_fade_group(national_rows, NATIONAL_RAMP),
+        **{id(r): PAST_ALPHA for r in past_rows},
+    }
 
-    m = folium.Map(location=list(MAP_CENTER), zoom_start=ZOOM_START, tiles="OpenStreetMap")
+    m = folium.Map(location=list(MAP_CENTER), zoom_start=ZOOM_START, max_zoom=19, tiles=None)
+    # Basemaps: standard OSM, plus Esri satellite imagery for street-level
+    # detail when zoomed in; the switcher (bottom-right) toggles them.
+    folium.TileLayer(
+        tiles=(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/"
+            "World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        ),
+        attr="Imagery &copy; Esri",
+        name="Satellite",
+        max_zoom=19,
+    ).add_to(m)
+    # Standard last: the control's radio defaults to the last base layer.
+    folium.TileLayer(tiles="OpenStreetMap", name="Standard", max_zoom=19).add_to(m)
 
     placed, unplaced = [], []
     for row in rows:
@@ -164,6 +189,8 @@ def build_map_node(state: PipelineState) -> dict:
             f"Interactive version \u2192</a></div>"
         )
     )
+
+    folium.LayerControl(collapsed=False, position="bottomright").add_to(m)
 
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     with open(csv_path, "w", newline="", encoding="utf-8") as f:

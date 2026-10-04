@@ -99,10 +99,22 @@ def meeting_sort_key(date_str: str) -> tuple[int, int]:
     return parsed
 
 
+# Pin opacity by temporal rank within a bucket: soonest fully solid, then a
+# hand-tuned fade. Ranks past the end of the ramp keep the last value.
+# UPCOMING fades gently and never reaches PAST_ALPHA, so far-future pins do
+# not look "past"; NATIONAL (MathFest) has exactly a handful of dates and
+# uses the steeper requested ramp.
+UPCOMING_RAMP = (1.0, 0.85, 0.75, 0.65)
+NATIONAL_RAMP = (1.0, 0.70, 0.55, 0.45)
+# Past meetings get a constant dimmed opacity, strictly below both ramps so
+# they never blend into the faintest future pins.
+PAST_ALPHA = 0.40
+
+
 def fade_alphas(
-    dates: list[str], step: float = 0.15, floor: float = 0.3
+    dates: list[str], ramp: tuple[float, ...] = UPCOMING_RAMP
 ) -> list[float]:
-    """Pin opacity per date: soonest = 1.0, later ones lighter and lighter.
+    """Pin opacity per date: soonest = ramp[0], later ranks fade along the ramp.
 
     Ties (same year/month) share the same alpha so equal dates do not look
     arbitrarily different. Input order is preserved in the output.
@@ -118,7 +130,7 @@ def fade_alphas(
         if key != prev_key:
             distinct += 1
             prev_key = key
-        alphas[idx] = max(floor, round(1.0 - step * distinct, 2))
+        alphas[idx] = ramp[min(distinct, len(ramp) - 1)]
     return alphas
 
 

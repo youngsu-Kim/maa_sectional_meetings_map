@@ -46,6 +46,24 @@ jobs:
           cp meeting_time.py shinylive_app/meeting_time.py
           python -c "from shinylive._export import export; export('shinylive_app', 'site/shinylive')"
 
+      - uses: r-lib/actions/setup-r@v2
+
+      - name: Install R packages (Posit binaries, source fallback)
+        run: |
+          Rscript -e 'options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os))); install.packages(c("shiny", "bslib", "leaflet", "shinylive"), repos = "https://packagemanager.posit.co/cran/__linux__/noble/latest", type = "binary")' \
+            || (sudo apt-get update -y \
+                && sudo apt-get install -y --no-install-recommends libgdal-dev libgeos-dev libproj-dev libudunits2-dev libsqlite3-dev \
+                && Rscript -e 'install.packages(c("shiny", "bslib", "leaflet", "shinylive"), repos = "https://cloud.r-project.org")')
+
+      - name: Run R selftest
+        run: Rscript shinylive_r_app/selftest.R
+
+      - name: Build Shinylive (R) export
+        run: |
+          cp data/meetings_latest.csv data/last_run.txt data/section_groups.csv shinylive_r_app/data/
+          rm -rf site/shinylive-r
+          Rscript -e 'shinylive::export("shinylive_r_app", "site/shinylive-r", template_params = list(title = "MAA Sectional Meetings"))'
+
       - name: Commit refreshed data
         run: |
           git config user.name "github-actions[bot]"

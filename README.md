@@ -203,8 +203,11 @@ until the CSV catches up); unlisted sections fall back to an "Other" group.
 [webR](https://docs.r-wasm.org/webr/latest/)): `shinylive_r_app/` is a
 feature-parity port of the same app — same sidebar, filters, fade ramps,
 table, draggable divider, and basemap switcher — with R itself running in
-the browser via WebAssembly. First load downloads the webR runtime (larger
-than Pyodide; roughly a minute on a typical connection, cached afterwards):
+the browser via WebAssembly. It is kept as a working reference for
+R-curious readers; the Python apps above are the primary front ends, and
+new features land there first. First load downloads the webR runtime
+(larger than Pyodide; roughly a minute on a typical connection, cached
+afterwards):
 
 ```bash
 Rscript -e 'shiny::runApp("shinylive_r_app", port = 8130)'  # native run

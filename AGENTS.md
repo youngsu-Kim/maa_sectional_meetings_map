@@ -61,6 +61,10 @@ commits refreshed `data/`, and publishes `site/` to Pages.
 - `meeting_time.py` ↔ `shinylive_app/meeting_time.py` must be byte-identical
   (test-enforced); `shinylive_r_app/meeting_time.R` is the R logic twin —
   keep it in step manually, `Rscript shinylive_r_app/selftest.R` guards it
+- The Python apps are the primary front ends; `shinylive_r_app/` is a
+  reference port for R users — CI builds it with `continue-on-error`, so it
+  can never block the weekly deploy, and new features land in the Python
+  apps first (port to R only when trivial)
 - R Shiny choice lists are mirrored from Python: `c(<label> = <value>)`
   where Python uses `{<value>: <label>}`
 - CI copies data CSVs into the app `data/` dirs before export; `site/` is

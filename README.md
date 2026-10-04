@@ -13,14 +13,96 @@ per meeting, colored by time relative to the run date —
 terms** (MathFest pins are **dark purple**) — and the view auto-fits the
 placed pins. The buckets are recomputed on every run, so the colors shift as
 terms pass. In the Shiny apps the Show-meetings filters offer Past / Current
-term / Upcoming / MathFest, and table locations link to Google Maps.
-
-```
-scrape -> extract (fan-out) -> validate -> [retry] -> geocode -> build_map
-```
+term / Upcoming / MathFest, the section filter is a searchable dropdown with
+region divider headers where each region is also selectable ("All of West"),
+and table locations link to Google Maps.
 
 > This is an automated extract of a public web page. There could be errors;
 > do not rely on this information. See the MAA page for authoritative details.
+
+## Pipeline
+
+```
+python -m src.main [--dry-run | --fixture F | --limit N | --model M]
+        │
+        ▼
+┌─────────────────────────────────────────────────────────────┐
+│ main()  (src/main.py)                                       │
+│  • load .env, apply --model override                        │
+│  • --dry-run → inject GoldenCsvFakeLLM + dry_run/ scratch   │
+│  • graph.invoke(state, max_concurrency=LLM_MAX_CONCURRENCY, │
+│                 callbacks=[TokenUsageTracker])              │
+└──────────────────────────┬──────────────────────────────────┘
+                           ▼
+        START ──► ┌─────────────────────────┐
+                   │ scrape                  │  curl_cffi (chrome impersonation)
+                   │  • dual HTML parser     │  maa.org sections → raw_sections
+                   │  • national meetings    │  maa.org/events → deterministic
+                   │    parsed w/o LLM       │  national-* rows (pre-extracted)
+                   └───────────┬─────────────┘
+                               │  route_after_scrape
+                               │  (skip rows already extracted)
+              ┌────────────────┼────────────────┐
+              ▼ (Send)         ▼ (Send)         ▼ (Send)     ← fan-out, one task
+      ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     per section, run
+      │ extract_one  │  │ extract_one  │  │ extract_one  │     concurrently
+      │ LLM →        │  │              │  │              │
+      │ SectionMeet- │  │   (× ~30)    │  │              │   groq → function_calling
+      │ ings schema  │  │              │  │              │   ollama → json_schema
+      └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+             └────────────┬────┴────────────────┘
+                          ▼ (all appends merge via operator.add)
+                 ┌──────────────────┐
+                 │ validate         │  merge by row_id (last write wins),
+                 │                  │  check: section name match, no HTML/URLs,
+                 │                  │  non-empty meetings, length/repetition,
+                 │                  │  TBA consistency → row_errors, failed_rows
+                 └────────┬─────────┘
+                          │  route_after_validate
+              errors &    ├──────────────────────────────┐
+              retry_count │                              │ no errors (or
+              ≤ 2         ▼                              │ retries exhausted)
+              ┌───────────────────────┐                  │
+              │ Send back to          │   up to initial  │
+              │ extract_one with the  │   + 2 retries    │
+              │ errors as feedback    │   per section    │
+              └───────────────────────┘                  │
+                                                         ▼
+                                              ┌─────────────────────┐
+                                              │ geocode             │
+                                              │  1. location_       │
+                                              │     corrections.csv │
+                                              │  2. geocode_cache   │
+                                              │     .csv (hits)     │
+                                              │  3. geopy Nominatim │
+                                              │     region-aware    │
+                                              │     (section_       │
+                                              │      regions.csv:   │
+                                              │      country codes, │
+                                              │      viewbox)       │
+                                              └──────────┬──────────┘
+                                                         ▼
+                                              ┌─────────────────────┐
+                                              │ build_map           │
+                                              │  • data/meetings_   │
+                                              │    latest.csv       │
+                                              │  • site/index.html  │
+                                              │    (folium, colors, │
+                                              │    fade, legend)    │
+                                              └──────────┬──────────┘
+                                                         ▼
+                        END ──► back in main()
+                          │
+                          ├─ write data/last_run.txt            (skipped if dry-run)
+                          ├─ snapshot data/archive/meetings_YYYY-MM-DD.csv
+                          ├─ print summary (sections, calls, failures, cache, tokens)
+                          └─ exit code: 1 if failed_rows else 0   ← CI gate
+```
+
+The `Send` API fans the work out dynamically (one `extract_one` task per
+section, plus one per retried row), and the `operator.add` reducer merges the
+parallel results into shared state; the retry loop is just a conditional edge
+pointing from `validate` back to `extract_one`.
 
 ## Setup
 
@@ -82,6 +164,10 @@ LLM_MODEL=... pytest tests/test_golden_llm.py   # live-LLM comparison vs golden 
 
 Two variants read `data/meetings_latest.csv` and recompute the past/current/
 upcoming buckets at startup, so colors stay current between pipeline runs.
+The map and table panes are separated by a draggable divider (like the
+sidebar's edge) so either can be enlarged, and a basemap switcher
+(bottom-right of the map) toggles Esri satellite imagery for street-level
+detail when zoomed in.
 
 **Server version** (Python [Shiny](https://shiny.posit.co/py/)):
 
@@ -105,7 +191,11 @@ python3 -m http.server --directory site  # open /shinylive/
 The GitHub Actions workflow builds this export on every run, so GitHub Pages
 serves the static Folium map at `/` and the Shinylive app at `/shinylive/`.
 `shinylive_app/meeting_time.py` is a synced copy of the repo-root
-`meeting_time.py` (a test enforces the sync).
+`meeting_time.py` (a test enforces the sync); `app.py` and
+`shinylive_app/app.py` are kept in step manually.
+The region divider headers come from `data/section_groups.csv` (a
+test checks it against the data, so a new or renamed MAA section fails CI
+until the CSV catches up); unlisted sections fall back to an "Other" group.
 
 Other platforms worth a look for this kind of dashboard:
 [Streamlit](https://streamlit.io/) (fastest prototypes; free hosting on

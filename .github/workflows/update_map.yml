@@ -54,9 +54,9 @@ jobs:
       - name: Install R packages (Posit binaries, source fallback)
         continue-on-error: true
         run: |
-          Rscript -e 'options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os))); install.packages(c("shiny", "bslib", "leaflet", "shinylive"), repos = "https://packagemanager.posit.co/cran/__linux__/noble/latest", type = "binary")' \
+          Rscript -e 'options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os))); install.packages(c("shiny", "bslib", "leaflet", "shinylive"), repos = "https://packagemanager.posit.co/cran/__linux__/noble/latest")' \
             || (sudo apt-get update -y \
-                && sudo apt-get install -y --no-install-recommends libgdal-dev libgeos-dev libproj-dev libudunits2-dev libsqlite3-dev \
+                && sudo apt-get install -y --no-install-recommends libgdal-dev libgeos-dev libproj-dev libudunits2-dev libsqlite3-dev libuv1-dev libarchive-dev \
                 && Rscript -e 'install.packages(c("shiny", "bslib", "leaflet", "shinylive"), repos = "https://cloud.r-project.org")')
 
       - name: Run R selftest

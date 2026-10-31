@@ -34,7 +34,7 @@ python -m src.main [--dry-run | --fixture F | --limit N | --model M]
 │                 callbacks=[TokenUsageTracker])              │
 └──────────────────────────┬──────────────────────────────────┘
                            ▼
-        START ──► ┌─────────────────────────┐
+        START ──►  ┌─────────────────────────┐
                    │ scrape                  │  curl_cffi (chrome impersonation)
                    │  • dual HTML parser     │  maa.org sections → raw_sections
                    │  • national meetings    │  maa.org/events → deterministic
@@ -246,4 +246,4 @@ repository in October 2025.
 
 ---
 
-Assisted by GLM-5.3-NVFP4, hosted on the National Research Platform.
+Assisted by GLM-5.3-NVFP4, hosted on the National Research Platform [https://nrp.ai/](https://nrp.ai/).

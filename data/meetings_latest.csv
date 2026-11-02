@@ -13,14 +13,14 @@ row-3,1,spring,upcoming,GOLDEN,"Feb 27, 2027",California State University Monter
 row-4,0,spring,past,ILLINOIS,"March 27-28, 2026",University of Illinois-Springfield,"Lauren Keough (AWM), Paul Blanchard (Visitor), Hei-Chi Chan, Paul Sirvatka",http://sections.maa.org/illinois/,39.7288145,-89.6172915,ok,
 row-4,1,spring,upcoming,ILLINOIS,"March 27-28, 2027",University of Illinois-Springfield,"Lauren Keough (AWM), Paul Blanchard (Visitor), Hei-Chi Chan, Paul Sirvatka",http://sections.maa.org/illinois/,39.7288145,-89.6172915,ok,
 row-5,0,spring,past,INDIANA,"April 10-11, 2026",Purdue University-Fort Wayne,"Noelle Sawyer (AWM), Mark Daniel Ward, John Rickert",https://www.indiana.maa.org/,41.1195851,-85.1057072,ok,
-row-5,1,fall,current,INDIANA,"October 3, 2026","Hanover College, Hanover, IN",Dr. Megan Heyman,https://www.indiana.maa.org/,38.7165177,-85.4616428,ok,
+row-5,1,fall,past,INDIANA,"October 3, 2026","Hanover College, Hanover, IN",Dr. Megan Heyman,https://www.indiana.maa.org/,38.7165177,-85.4616428,ok,
 row-6,0,spring,past,INTERMOUNTAIN,"March 27-28, 2026",Brigham Young University,"Ben Woodruff, Lauralea Otis, Robert Lang",https://www.intermountain.maa.org/,40.2498073,-111.6499458,ok,
 row-7,0,fall,current,IOWA,"November 13-14, 2026","Creighton University, Omaha, NE",,https://www.iowa.maa.org/,41.2658565,-95.9450555,ok,"corrected from 'Creighton University, Omaha, NB' (MAA page typo: NB is New Brunswick; Nebraska is NE)"
 row-8,0,spring,past,KANSAS,"March 27-28, 2026",Fort Hays State University,"Opel Jones, Hortensia Soto",https://www.kansas.maa.org/,38.8706832,-99.3442115,ok,
 row-9,0,spring,past,KENTUCKY,"April 10-11, 2026",Thomas More University,"Ranthony Clark, Dhanuja Kasturiratna",https://www.kentucky.maa.org/,39.0209185,-84.5676956,ok,
 row-10,0,spring,past,LOUISIANA-MISSISSIPPI,"February 26-28, 2026",University of Lafayette,"Richard Cleary, Lauren Keough, Doug Ensley",https://www.la-ms.maa.org/2026-meeting,40.724044,-73.9961681,ok,
 row-11,0,spring,past,MD-DC-VA,"Apr. 24–25, 2026",Frederick County Community College,"Opel Jones, Alexander Diaz-Lopez",http://sections.maa.org/mddcva/,39.451578,-77.4181668,ok,
-row-11,1,fall,current,MD-DC-VA,"Oct. 30–31, 2026",Randolph Macon College,,http://sections.maa.org/mddcva/,37.7625105,-77.4795421,ok,
+row-11,1,fall,past,MD-DC-VA,"Oct. 30–31, 2026",Randolph Macon College,,http://sections.maa.org/mddcva/,37.7625105,-77.4795421,ok,
 row-12,0,spring,past,METROPOLITAN NEW YORK,"May 2, 2026",Saint Thomas Aquinas College,"Tamara Lakins, Po-Shen Loh",http://sections.maa.org/metrony/,41.0412949,-73.9371582,ok,"corrected from 'St. Thomas Aquinas College' (OSM records the Sparkill NY campus as ""Saint Thomas Aquinas College""; the ""St."" spelling only matches a college in California)"
 row-13,0,spring,past,MICHIGAN,"March 27-28, 2026",Saginaw Valley State University,"Olivier Heubo-Kwengna, Steven Tuckey, Steven Butler (Polya)",http://sections.maa.org/michigan/,43.5158881,-83.9593131,ok,
 row-13,1,spring,upcoming,MICHIGAN,"April 9-10, 2027","Kalamazoo College, Kalamazoo, MI",,http://sections.maa.org/michigan/,42.2907574,-85.5993647,ok,corrected from 'Kalamazoo College and Western Michigan University' (joint meeting at two campuses; pin placed at the first venue)
@@ -28,7 +28,7 @@ row-14,0,spring,past,MISSOURI,"March 26-28, 2026",Columbia College,"Stephen Mont
 row-15,0,spring,past,NEBRASKA - SOUTHEAST SOUTH DAKOTA,"April 11-12, 2026",Creighton University,Steve Butler (Polya),https://www.nesesd.maa.org/events,41.2658565,-95.9450555,ok,
 row-16,0,spring,past,NEW JERSEY,"March 28, 2026",Ramapo College of New Jersey,"Victor Piercey, Kathleen Almy, Kariane Calta",http://sections.maa.org/newjersey/Main/Home.html,41.0822446,-74.1738235,ok,
 row-17,0,spring,past,NORTH CENTRAL,"March 27-28, 2026","St. Cloud State University, St. Cloud, MN","Annalisa Crannell, Yariana Diaz",https://www.northcentral.maa.org/maa-ncs-spring-2026-meeting,45.549977,-94.1514779,ok,
-row-17,1,fall,current,NORTH CENTRAL,"Oct. 9-10, 2026","University of Minnesota Morris, Morris, MN",,https://www.northcentral.maa.org/maa-ncs-spring-2026-meeting,45.5902344,-95.8993091,ok,
+row-17,1,fall,past,NORTH CENTRAL,"Oct. 9-10, 2026","University of Minnesota Morris, Morris, MN",,https://www.northcentral.maa.org/maa-ncs-spring-2026-meeting,45.5902344,-95.8993091,ok,
 row-18,0,spring,past,NORTHEASTERN,"May 29-30, 2026","Massachusetts Maritime Academy, MA","Richard Cleary, Sam Habach, Francis Su",https://www.northeastern.maa.org/,41.7403399,-70.6241581,ok,
 row-18,1,fall,current,NORTHEASTERN,"Nov 20-21, 2026","Southern New Hampshire University, Manchester, NH",,https://www.northeastern.maa.org/,43.0374605,-71.4478392,ok,
 row-19,0,spring,past,OHIO,"March 20-21, 2026","John Carroll University, OH","Jenna Carpenter, Thomas LaFramboise, Robert Kassouf-Short",https://www.ohio.maa.org/,41.490381,-81.5287587,ok,
@@ -37,7 +37,7 @@ row-20,1,spring,upcoming,OKLAHOMA-ARKANSAS,"April 1-3, 2027","Oklahoma Baptist U
 row-21,0,spring,past,PACIFIC NORTHWEST,"April 17-18, 2026","Linfield University, McMinnville, OR","Pamela Harris, Steve Butler, Lisa Marano",http://sections.maa.org/pnw/,45.1984734,-123.1981384,ok,
 row-22,0,spring,past,ROCKY MOUNTAIN,"April 17-18, 2026",Colorado Mesa University,"Francis Su, Audrey Malagon, Hortensia Soto, Forest Mannan",https://www.rockymountain.maa.org/,39.0819157,-108.5559956,ok,
 row-23,0,spring,past,SEAWAY,"April 17 - 18, 2026",St. John Fisher University,"Susan Loepp, Chantal Buteau, Judith Covington (Visitor), Kelly Delp",https://maaseaway.org/,43.1150631,-77.5104317,ok,corrected from 'St. Fisher University' (MAA page typo: St. John Fisher University)
-row-23,1,fall,current,SEAWAY,"Oct 23 - 24, 2026",Utica University,"David Clark, Amanda Lipniki, Nathan Alexander (NAM), Ryan Gantner",https://maaseaway.org/,43.0972479,-75.2704844,ok,
+row-23,1,fall,past,SEAWAY,"Oct 23 - 24, 2026",Utica University,"David Clark, Amanda Lipniki, Nathan Alexander (NAM), Ryan Gantner",https://maaseaway.org/,43.0972479,-75.2704844,ok,
 row-24,0,spring,past,SOUTHEASTERN,"March 26-28, 2026",University of North Alabama,Hortensia Soto,https://southeastern.maa.org/,34.8076805,-87.6817474,ok,
 row-24,1,spring,upcoming,SOUTHEASTERN,"March 18-20, 2027",Georgia Southern University,,https://southeastern.maa.org/,32.4214381,-81.7845053,ok,
 row-25,0,spring,past,SOUTHERN CALIFORNIA - NEVADA,"March 28, 2026",University of Southern California,Thomas Murphy,http://sections.maa.org/socalnv/,34.021869,-118.2858579,ok,
